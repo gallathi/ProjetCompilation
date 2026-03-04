@@ -49,18 +49,18 @@ int main(int argn, const char **argv)
       exit(1);
   }
 
-	bool debug = false;
+  bool debug = false;
   VariableVisitor vv(debug);
   vv.visit(tree);
   
   if (debug)
-  	cout << endl << "Visite des variables : " << vv.getErrorCount() << " erreur(s) détectée(s)." << endl << endl;
-	if (vv.getErrorCount() > 0) {
-		if (debug)
-			cout << "Génération de code annulée." << endl;
-		exit(1);
-	}
-  CodeGenVisitor v(vv.getVarTable());
+    cout << endl << "Visite des variables : " << vv.getErrorCount() << " erreur(s) détectée(s)." << endl << endl;
+  if (vv.getErrorCount() > 0) {
+    if (debug)
+      cout << "Génération de code annulée." << endl;
+    exit(1);
+  }
+  CodeGenVisitor v(vv.getVarTable(), vv.getNextOffset());
   v.visit(tree);
 
   return 0;

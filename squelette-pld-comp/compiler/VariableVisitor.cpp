@@ -6,6 +6,10 @@ int VariableVisitor::getErrorCount() {
 	return errorCount;
 }
 
+int VariableVisitor::getNextOffset() {
+    return nextIndex;
+}
+
 std::map<std::string, varInfo> VariableVisitor::getVarTable() {
 	return varTable;
 }

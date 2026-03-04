@@ -10,16 +10,17 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     std::cout<< " main: \n" ;
     #endif
 	
-	// prologue
+	// Prologue
 	std::cout<< "    pushq %rbp\n";
 	std::cout<< "    movq %rsp, %rbp\n";	
-	
+
+	// Parcours du code
 	if (ctx->bloc() != nullptr) {
 		visit(ctx->bloc());
 	}
     visit(ctx->return_stmt());
     
-    // epilogue
+    // Epilogue
     std::cout << "    popq %rbp\n";
     std::cout << "    ret\n";
 
@@ -31,6 +32,12 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 	int varIndex = varTable[varName].index;
 	visit(ctx->expression());
 	std::cout << "    movl %eax, -" << varIndex << "(%rbp)" << std::endl;
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
+{
+    visit(ctx->expression());
     return 0;
 }
 
@@ -46,8 +53,44 @@ antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx) {
 	return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
-{
+antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx) {
     visit(ctx->expression());
+    std::cout << "    negl %eax" << std::endl;
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
+{
+    char op = ctx->op->getText()[0];
+    visit(ctx->expression(0));
+    std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
+    nextIndex += 4;
+    visit(ctx->expression(1));
+    if (op == '+') {
+        std::cout << "    addl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+    } else {
+        std::cout << "    subl %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
+        std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+    }
+    nextIndex -= 4;
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
+{
+    /*
+    char operator = ctx->OPADDSUB()->getText()[0];
+    visit(ctx->expression(0));
+    std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
+    nextIndex += 4;
+    visit(ctx->expression(1));
+    if (operator == '*') {
+        std::cout << "    add %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
+    } else {
+        std::cout << "    sub -" << nextIndex << "(%rbp), %eax" << std::endl;
+        std::cout << "    movl -" << nextIndex << "(%rbp), %eax" << std::endl;
+    }
+    nextIndex -= 4;
+    */
     return 0;
 }

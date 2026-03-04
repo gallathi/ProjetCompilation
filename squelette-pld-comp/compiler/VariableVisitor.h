@@ -22,6 +22,7 @@ class  VariableVisitor : public ifccBaseVisitor {
 		virtual std::any visitVar(ifccParser::VarContext *ctx) override;
 		virtual std::any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override;
 		int getErrorCount();
+		int getNextOffset();
 		std::map<std::string, varInfo> getVarTable();
 	protected:
 		std::map<std::string, varInfo> varTable;
