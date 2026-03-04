@@ -1,9 +1,0 @@
-input.c: In function ‘main’:
-input.c:2:19: error: redeclaration of ‘a’ with no linkage
-    2 |         int a, b, a;
-      |                   ^
-input.c:2:13: note: previous declaration of ‘a’ with type ‘int’
-    2 |         int a, b, a;
-      |             ^
-
-exit status: 1

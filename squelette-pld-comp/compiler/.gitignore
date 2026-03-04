@@ -1,0 +1,8 @@
+../.idea
+../.vscode
+build/
+generated/
+*.mk
+!example-config.mk
+ifcc
+../ifcc-test-output/
