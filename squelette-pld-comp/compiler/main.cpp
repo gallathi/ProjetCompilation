@@ -8,13 +8,11 @@
 #include "generated/ifccParser.h"
 #include "generated/ifccBaseVisitor.h"
 
-#include "CodeGenVisitor.h"
 #include "VariableVisitor.h"
+#include "CodeGenVisitor.h"
 
 using namespace antlr4;
 using namespace std;
-
-// Commande de run : ./ifcc ../testfiles/8_testRegexVar.c > ../testfiles/out.s && g++ ../testfiles/out.s -o ../testfiles/a.out && ../testfiles/a.out
 
 int main(int argn, const char **argv)
 {
@@ -51,20 +49,19 @@ int main(int argn, const char **argv)
       exit(1);
   }
 
-  bool debug = false;
+	bool debug = false;
   VariableVisitor vv(debug);
   vv.visit(tree);
-
-  if (vv.getErrorCount() > 0) {
-  cout << "Il y a eu ";
-  cout << vv.getErrorCount();
-  cout << " erreur(s)." << endl;
-      cout << "Génération de code annulée." << endl;
-      exit(1);
-  }
-
-  CodeGenVisitor cgv(&vv);
-  cgv.visit(tree);
+  
+  if (debug)
+  	cout << endl << "Visite des variables : " << vv.getErrorCount() << " erreur(s) détectée(s)." << endl << endl;
+	if (vv.getErrorCount() > 0) {
+		if (debug)
+			cout << "Génération de code annulée." << endl;
+		exit(1);
+	}
+  CodeGenVisitor v(vv.getVarTable());
+  v.visit(tree);
 
   return 0;
 }

@@ -27,6 +27,14 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitDeclaration(ifccParser::DeclarationContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitDeclaration_var(ifccParser::Declaration_varContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitAffectation(ifccParser::AffectationContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -43,19 +51,11 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitMultdiv(ifccParser::MultdivContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
   virtual std::any visitAddsub(ifccParser::AddsubContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitDeclaration(ifccParser::DeclarationContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitDeclaration_var(ifccParser::Declaration_varContext *ctx) override {
+  virtual std::any visitMuldiv(ifccParser::MuldivContext *ctx) override {
     return visitChildren(ctx);
   }
 

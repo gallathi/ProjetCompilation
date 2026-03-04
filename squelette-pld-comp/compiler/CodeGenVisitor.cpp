@@ -9,39 +9,41 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     std::cout<< ".globl main\n" ;
     std::cout<< " main: \n" ;
     #endif
-
-    std::cout << "    pushq %rbp\n";
-    std::cout << "    movq %rsp, %rbp\n";
-
-    this->visit( ctx->bloc());
-    this->visit( ctx->return_stmt() );
+	
+	// prologue
+	std::cout<< "    pushq %rbp\n";
+	std::cout<< "    movq %rsp, %rbp\n";	
+	
+	if (ctx->bloc() != nullptr) {
+		visit(ctx->bloc());
+	}
+    visit(ctx->return_stmt());
     
+    // epilogue
     std::cout << "    popq %rbp\n";
     std::cout << "    ret\n";
 
     return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
-{
-    std::string var = ctx->VAR()->getText();
-    visit(ctx->expression());
-    int position = varVisitor->getPosition(var);
-    std::cout << "    movl %eax, -" << position << "(%rbp)\n";
-    return 0;
-}
-
-antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
-{
-    std::string var = ctx->VAR()->getText();
-    int position = varVisitor->getPosition(var);
-    std::cout << "    movl -" << position << "(%rbp), %eax\n";
+antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx) {
+    std::string varName = ctx->VAR()->getText();
+	int varIndex = varTable[varName].index;
+	visit(ctx->expression());
+	std::cout << "    movl %eax, -" << varIndex << "(%rbp)" << std::endl;
     return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx) {
-    std::cout << "    movl $" << ctx->CONST()->getText() << ", %eax\n";
-    return 0;
+	std::cout << "    movl $" << ctx->CONST()->getText() << ", %eax" << std::endl;
+	return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx) {
+	std::string varName = ctx->VAR()->getText();
+	int varIndex = varTable[varName].index;
+	std::cout << "    movl -" << varIndex << "(%rbp), %eax" << std::endl;
+	return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)

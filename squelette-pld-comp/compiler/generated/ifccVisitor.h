@@ -25,6 +25,10 @@ public:
 
     virtual std::any visitBloc(ifccParser::BlocContext *context) = 0;
 
+    virtual std::any visitDeclaration(ifccParser::DeclarationContext *context) = 0;
+
+    virtual std::any visitDeclaration_var(ifccParser::Declaration_varContext *context) = 0;
+
     virtual std::any visitAffectation(ifccParser::AffectationContext *context) = 0;
 
     virtual std::any visitPar(ifccParser::ParContext *context) = 0;
@@ -33,13 +37,9 @@ public:
 
     virtual std::any visitVar(ifccParser::VarContext *context) = 0;
 
-    virtual std::any visitMultdiv(ifccParser::MultdivContext *context) = 0;
-
     virtual std::any visitAddsub(ifccParser::AddsubContext *context) = 0;
 
-    virtual std::any visitDeclaration(ifccParser::DeclarationContext *context) = 0;
-
-    virtual std::any visitDeclaration_var(ifccParser::Declaration_varContext *context) = 0;
+    virtual std::any visitMuldiv(ifccParser::MuldivContext *context) = 0;
 
     virtual std::any visitReturn_stmt(ifccParser::Return_stmtContext *context) = 0;
 

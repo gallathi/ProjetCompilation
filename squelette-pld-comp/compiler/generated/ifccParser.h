@@ -14,12 +14,12 @@ public:
   enum {
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, RETURN = 10, CONST = 11, COMMENT = 12, DIRECTIVE = 13, 
-    WS = 14, VAR = 15, OPMULTDIV = 16, OPADDSUB = 17
+    WS = 14, VAR = 15, OPMULDIV = 16, OPADDSUB = 17
   };
 
   enum {
-    RuleAxiom = 0, RuleProg = 1, RuleBloc = 2, RuleAffectation = 3, RuleExpression = 4, 
-    RuleDeclaration = 5, RuleDeclaration_var = 6, RuleReturn_stmt = 7
+    RuleAxiom = 0, RuleProg = 1, RuleBloc = 2, RuleDeclaration = 3, RuleDeclaration_var = 4, 
+    RuleAffectation = 5, RuleExpression = 6, RuleReturn_stmt = 7
   };
 
   explicit ifccParser(antlr4::TokenStream *input);
@@ -42,10 +42,10 @@ public:
   class AxiomContext;
   class ProgContext;
   class BlocContext;
-  class AffectationContext;
-  class ExpressionContext;
   class DeclarationContext;
   class Declaration_varContext;
+  class AffectationContext;
+  class ExpressionContext;
   class Return_stmtContext; 
 
   class  AxiomContext : public antlr4::ParserRuleContext {
@@ -90,6 +90,33 @@ public:
   };
 
   BlocContext* bloc();
+
+  class  DeclarationContext : public antlr4::ParserRuleContext {
+  public:
+    DeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    Declaration_varContext *declaration_var();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  DeclarationContext* declaration();
+
+  class  Declaration_varContext : public antlr4::ParserRuleContext {
+  public:
+    Declaration_varContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *VAR();
+    Declaration_varContext *declaration_var();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Declaration_varContext* declaration_var();
 
   class  AffectationContext : public antlr4::ParserRuleContext {
   public:
@@ -145,17 +172,6 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  MultdivContext : public ExpressionContext {
-  public:
-    MultdivContext(ExpressionContext *ctx);
-
-    std::vector<ExpressionContext *> expression();
-    ExpressionContext* expression(size_t i);
-    antlr4::tree::TerminalNode *OPMULTDIV();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
   class  AddsubContext : public ExpressionContext {
   public:
     AddsubContext(ExpressionContext *ctx);
@@ -167,35 +183,19 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  MuldivContext : public ExpressionContext {
+  public:
+    MuldivContext(ExpressionContext *ctx);
+
+    std::vector<ExpressionContext *> expression();
+    ExpressionContext* expression(size_t i);
+    antlr4::tree::TerminalNode *OPMULDIV();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   ExpressionContext* expression();
   ExpressionContext* expression(int precedence);
-  class  DeclarationContext : public antlr4::ParserRuleContext {
-  public:
-    DeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    Declaration_varContext *declaration_var();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  DeclarationContext* declaration();
-
-  class  Declaration_varContext : public antlr4::ParserRuleContext {
-  public:
-    Declaration_varContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *VAR();
-    Declaration_varContext *declaration_var();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Declaration_varContext* declaration_var();
-
   class  Return_stmtContext : public antlr4::ParserRuleContext {
   public:
     Return_stmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);

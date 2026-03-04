@@ -1,0 +1,4 @@
+/usr/bin/ld: attention: /tmp/ccyvkUUi.o: l'absence de la section .note.GNU-stack implique une pile exécutable
+/usr/bin/ld: NOTE: Ce comportement est déprécié et sera supprimé dans une version ultérieure de l'éditeur de liens
+
+exit status: 0
