@@ -10,12 +10,12 @@ declaration : 'int' declaration_var ';' | /*epsilon*/ ;
 declaration_var : VAR ',' declaration_var | VAR ;
 affectation : VAR '=' expression ';' ;
 
-expression : '(' expression ')'                     #par
-           | MINUS expression                       #opposite
+expression : '(' expression ')'                         #par
+           | MINUS expression                           #opposite
            | expression op=(MUL|DIV) expression         #muldiv
-           | expression op=(PLUS|MINUS) expression     #addsub
-           | CONST                                  #const
-           | VAR                                    #var;
+           | expression op=(PLUS|MINUS) expression      #addsub
+           | CONST                                      #const
+           | VAR                                        #var;
 
 return_stmt : RETURN expression ';' ;
 
