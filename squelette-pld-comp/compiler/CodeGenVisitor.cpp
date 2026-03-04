@@ -59,38 +59,42 @@ antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx) {
     return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
-{
-    char op = ctx->op->getText()[0];
-    visit(ctx->expression(0));
-    std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
-    nextIndex += 4;
-    visit(ctx->expression(1));
-    if (op == '+') {
-        std::cout << "    addl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-    } else {
-        std::cout << "    subl %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
-        std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-    }
-    nextIndex -= 4;
-    return 0;
+antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx) {
+	char op = ctx->op->getText()[0];
+	visit(ctx->expression(0));
+	std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
+	nextIndex += 4;
+	visit(ctx->expression(1));
+	if (op == '+') {
+		std::cout << "    addl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+	} else if (op == '-') {
+		std::cout << "    subl %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
+		std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+	}
+	nextIndex -= 4;
+	return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
-{
-    /*
-    char operator = ctx->OPADDSUB()->getText()[0];
-    visit(ctx->expression(0));
-    std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
-    nextIndex += 4;
-    visit(ctx->expression(1));
-    if (operator == '*') {
-        std::cout << "    add %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
-    } else {
-        std::cout << "    sub -" << nextIndex << "(%rbp), %eax" << std::endl;
-        std::cout << "    movl -" << nextIndex << "(%rbp), %eax" << std::endl;
-    }
-    nextIndex -= 4;
-    */
-    return 0;
+antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx) {
+	char op = ctx->op->getText()[0];
+	visit(ctx->expression(0));
+	std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
+	nextIndex += 4;
+	visit(ctx->expression(1));
+	if (op == '*') {
+		std::cout << "    imul -" << nextIndex - 4 << "(%rbp)" << std::endl;
+	} else if (op == '/') {
+		std::cout << "    movl $0, %edx" << std::endl;
+		std::cout << "    movl %eax, %ecx" << std::endl;
+		std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+		std::cout << "    idiv %ecx" << std::endl;
+	} else if (op == '%') {
+		std::cout << "    movl $0, %edx" << std::endl;
+		std::cout << "    movl %eax, %ecx" << std::endl;
+		std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+		std::cout << "    idiv %ecx" << std::endl;
+		std::cout << "    movl %edx, %eax" << std::endl;
+	}
+	nextIndex -= 4;
+	return 0;
 }

@@ -12,7 +12,7 @@ affectation : VAR '=' expression ';' ;
 
 expression : '(' expression ')'                         #par
            | MINUS expression                           #opposite
-           | expression op=(MUL|DIV) expression         #muldiv
+           | expression op=(MUL|DIV|MOD) expression     #muldiv
            | expression op=(PLUS|MINUS) expression      #addsub
            | CONST                                      #const
            | VAR                                        #var;
@@ -29,3 +29,4 @@ PLUS : '+';
 MINUS : '-';
 MUL : '*';
 DIV : '/';
+MOD : '%';
