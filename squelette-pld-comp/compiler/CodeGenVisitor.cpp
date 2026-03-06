@@ -24,6 +24,10 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     std::cout << "    popq %rbp\n";
     std::cout << "    ret\n";
 
+    #ifndef __APPLE__
+        std::cout << ".section .note.GNU-stack,\"\",@progbits\n";
+    #endif
+
     return 0;
 }
 
@@ -82,7 +86,7 @@ antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx) {
 	nextIndex += 4;
 	visit(ctx->expression(1));
 	if (op == '*') {
-		std::cout << "    imul -" << nextIndex - 4 << "(%rbp)" << std::endl;
+		std::cout << "    imull -" << nextIndex - 4 << "(%rbp)" << std::endl;
 	} else if (op == '/') {
 		std::cout << "    movl $0, %edx" << std::endl;
 		std::cout << "    movl %eax, %ecx" << std::endl;
