@@ -81,7 +81,8 @@ Possible optimization:
 class BasicBlock
 {
 public:
-	BasicBlock(CFG *cfg, string entry_label);
+	BasicBlock(CFG *cfg, string entry_label) : cfg(cfg), label(entry_label) {}
+	virtual ~BasicBlock();
 	void gen_asm(ostream &o); /**< x86 assembly code generation for this basic block (very simple) */
 
 	void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params);
@@ -109,9 +110,8 @@ protected:
 class CFG
 {
 public:
-	CFG(DefFonction *ast);
-
-	DefFonction *ast; /**< The AST this CFG comes from */
+	CFG() {}
+	virtual ~CFG();
 
 	void add_bb(BasicBlock *bb);
 

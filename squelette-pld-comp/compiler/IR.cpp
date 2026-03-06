@@ -65,6 +65,28 @@ void CFG::add_bb(BasicBlock *bb) {
 	bbs.push_back(bb);
 }
 
-IRInstr::IRInstr(BasicBlock *bb_, Operation op, Type t, vector<string> params) : bb(bb_), op(op), t(t), params(params)
-{
+CFG::~CFG() {
+	for (int i=0; i<bbs.size(); i++) {
+		delete(bbs.back());
+	}
+}
+
+BasicBlock::~BasicBlock() {
+	for (int i=0; i<instrs.size(); i++) {
+		delete(instrs.back());
+	}
+}
+
+void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> params) {
+	instrs.push_back(new IRInstr(this, op, t, params));
+}
+
+void BasicBlock::gen_asm(ostream &o) {
+	o << label << ":" << endl;
+	for (auto instr : instrs) {
+		instr->gen_asm(o);
+	}
+	if (exit_true != nullptr) {
+		o << "    jmp " << exit_true->label << endl;
+	}
 }
