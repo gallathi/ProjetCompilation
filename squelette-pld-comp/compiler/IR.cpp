@@ -22,3 +22,7 @@ void CFG::gen_asm_epilogue(ostream& o) {
         std::cout << ".section .note.GNU-stack,\"\",@progbits\n";
     #endif
 }
+
+IRInstr::IRInstr(BasicBlock *bb_, Operation op, Type t, vector<string> params) : bb(bb_), op(op), t(t), params(params)
+{
+}
