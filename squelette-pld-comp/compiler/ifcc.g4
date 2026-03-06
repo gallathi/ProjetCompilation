@@ -2,13 +2,28 @@ grammar ifcc;
 
 axiom : prog EOF ;
 
-prog : 'int' 'main' '(' ')' '{' declaration bloc return_stmt '}' ;
+prog : 'int' 'main' '(' ')' block ;
 
-bloc : affectation bloc | /*epsilon*/ ;
+block
+    : '{' stmt* return_stmt '}'
+    ;
 
-declaration : 'int' declaration_var ';' | /*epsilon*/ ;
+stmt 
+    : declaration
+    | declaration_var
+    | affectation 
+    | return_stmt
+    | affectation_declaration
+    ; 
+
+
+
+declaration : 'int' declaration_var ';';
 declaration_var : VAR ',' declaration_var | VAR ;
 affectation : VAR '=' expression ';' ;
+return_stmt : 'return' expression ';' ;
+affectation_declaration: 'int' VAR '=' expression ';' ;
+
 
 expression : '(' expression ')'                         #par
            | MINUS expression                           #opposite
@@ -17,9 +32,8 @@ expression : '(' expression ')'                         #par
            | CONST                                      #const
            | VAR                                        #var;
 
-return_stmt : RETURN expression ';' ;
 
-RETURN : 'return' ;
+
 CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
 DIRECTIVE : '#' .*? '\n' -> skip ;
