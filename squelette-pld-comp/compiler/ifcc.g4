@@ -5,22 +5,24 @@ axiom : prog EOF ;
 prog : 'int' 'main' '(' ')' block ;
 
 block
-    : '{' stmt* '}'
+    : '{' stmt* return_stmt '}'
     ;
 
 stmt 
     : declaration
     | declaration_var
     | affectation 
-    | return_stmt 
+    | return_stmt
+    | affectation_declaration
     ; 
 
 
 
-declaration : 'int' declaration_var ';' | /*epsilon*/ ;
+declaration : 'int' declaration_var ';';
 declaration_var : VAR ',' declaration_var | VAR ;
 affectation : VAR '=' expression ';' ;
-return_stmt : RETURN expression ';' ;
+return_stmt : 'return' expression ';' ;
+affectation_declaration: 'int' VAR '=' expression ';' ;
 
 
 expression : '(' expression ')'                         #par
@@ -32,7 +34,6 @@ expression : '(' expression ')'                         #par
 
 
 
-RETURN : 'return' ;
 CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
 DIRECTIVE : '#' .*? '\n' -> skip ;
