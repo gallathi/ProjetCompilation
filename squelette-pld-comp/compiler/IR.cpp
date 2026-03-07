@@ -51,6 +51,7 @@ void CFG::add_to_symbol_table(string name, Type t)
 string CFG::create_new_tempvar(Type t)
 {
     string newName = "!tmp" + to_string(nextFreeSymbolIndex);
+    ++nextFreeSymbolIndex;
     return newName;
 }
 
@@ -67,6 +68,7 @@ Type CFG::get_var_type(string name)
 string CFG::new_BB_name()
 {
     string newName = "bb" + to_string(nextBBnumber);
+    ++nextBBnumber;
     return newName;
 }
 

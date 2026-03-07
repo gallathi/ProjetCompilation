@@ -51,7 +51,6 @@ antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 {
 	string tempVar = cfg.create_new_tempvar(Type::INT);
 	string varName = ctx->CONST()->getText();
-	int varIndex = varTable[varName].index;
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, ctx->CONST()->getText()});
 	return tempVar;
 }
@@ -60,7 +59,6 @@ antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 {
 	string tempVar = cfg.create_new_tempvar(Type::INT);
 	string varName = ctx->VAR()->getText();
-	int varIndex = varTable[varName].index;
 	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {tempVar, varName});
 
 	return tempVar;
