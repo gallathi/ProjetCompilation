@@ -77,17 +77,17 @@ void CFG::add_bb(BasicBlock *bb)
 
 CFG::~CFG()
 {
-    for (int i = 0; i < bbs.size(); i++)
+    for (BasicBlock *bb : bbs)
     {
-        delete (bbs.back());
+        delete bb;
     }
 }
 
 BasicBlock::~BasicBlock()
 {
-    for (int i = 0; i < instrs.size(); i++)
+    for (IRInstr *instr : instrs)
     {
-        delete (instrs.back());
+        delete instr;
     }
 }
 
