@@ -2,161 +2,189 @@
 #include <iostream>
 using namespace std;
 
-void CFG::gen_asm_prologue(ostream& o) {
-	#ifdef __APPLE__
-    o << ".globl _main\n" ;
-    o << " _main: \n" ;
-    #else
-    o << ".globl main\n" ;
-    o << " main: \n" ;
-    #endif
+void CFG::gen_asm_prologue(ostream &o)
+{
+#ifdef __APPLE__
+    o << ".globl _main\n";
+    o << " _main: \n";
+#else
+    o << ".globl main\n";
+    o << " main: \n";
+#endif
 
-	o << "    pushq %rbp\n";
-	o << "    movq %rsp, %rbp\n";
+    o << "    pushq %rbp\n";
+    o << "    movq %rsp, %rbp\n";
 }
 
-void CFG::gen_asm_epilogue(ostream& o) {
-	o << "    popq %rbp\n";
+void CFG::gen_asm_epilogue(ostream &o)
+{
+    o << "    popq %rbp\n";
     o << "    ret\n";
 
-    #ifndef __APPLE__
-        o << ".section .note.GNU-stack,\"\",@progbits\n";
-    #endif
+#ifndef __APPLE__
+    o << ".section .note.GNU-stack,\"\",@progbits\n";
+#endif
 }
 
-void CFG::gen_asm(ostream &o) {
-	current_bb = bbs[0];
-	current_bb->gen_asm(o);
-	while (current_bb->exit_true != nullptr) {
-		current_bb = current_bb->exit_true;
-	}
+/*void CFG::gen_asm(ostream &o)
+{
+    current_bb = bbs[0];
+    current_bb->gen_asm(o);
+    while (current_bb->exit_true != nullptr)
+    {
+        current_bb = current_bb->exit_true;
+    }
+}*/
+
+string CFG::IR_reg_to_asm(string reg)
+{
+    return "-" + to_string(SymbolIndex[reg]) + "(%rbp)";
 }
 
-string CFG::IR_reg_to_asm(string reg) {
-	return "-" + itos(SymbolIndex[reg]) + "%(rbp)";
+void CFG::add_to_symbol_table(string name, Type t)
+{
+    SymbolType[name] = t;
+    SymbolIndex[name] = nextFreeSymbolIndex;
+    nextFreeSymbolIndex++;
 }
 
-void CFG::add_to_symbol_table(string name, Type t) {
-	SymbolType[name] = t;
-	SymbolIndex[name] = nextFreeSymbolIndex;
-	nextFreeSymbolIndex++;
+string CFG::create_new_tempvar(Type t)
+{
+    string newName = "!tmp" + to_string(nextFreeSymbolIndex);
+    return newName;
 }
 
-string CFG::create_new_tempvar(Type t) {
-	string newName = "!tmp" + itos(nextFreeSymbolIndex);
-	return newName;
+int CFG::get_var_index(string name)
+{
+    return SymbolIndex[name];
 }
 
-int CFG::get_var_index(string name) {
-	return SymbolIndex[name];
+Type CFG::get_var_type(string name)
+{
+    return SymbolType[name];
 }
 
-Type CFG::get_var_type(string name) {
-	return SymbolType[name];
+string CFG::new_BB_name()
+{
+    string newName = "bb" + to_string(nextBBnumber);
+    return newName;
 }
 
-string CFG::new_BB_name() {
-	string newName = "bb" + itos(nextBBnumber);
-	return newName;
+void CFG::add_bb(BasicBlock *bb)
+{
+    bbs.push_back(bb);
 }
 
-void CFG::add_bb(BasicBlock *bb) {
-	bbs.push_back(bb);
-}
-
-CFG::~CFG() {
-	for (int i=0; i<bbs.size(); i++) {
-		delete(bbs.back());
-	}
-}
-
-BasicBlock::~BasicBlock() {
-	for (int i=0; i<instrs.size(); i++) {
-		delete(instrs.back());
-	}
-}
-
-void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> params) {
-	instrs.push_back(new IRInstr(this, op, t, params));
-}
-
-void BasicBlock::gen_asm(ostream &o) {
-	o << label << ":" << endl;
-	for (auto instr : instrs) {
-		instr->gen_asm(o);
-	}
-	if (exit_true != nullptr) {
-		o << "    jmp " << exit_true->label << endl;
-	}
-}
-
-void IRInstr::gen_asm(ostream &o) {
-    switch(op) {
-        case ldconst: // Params : destination / const
-            o << "    movl $" << params[1] << ", " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case copy: // Params : destination / variable à assigner
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case add: // Params : destination / var1 / var2
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case sub: // Params : destination / var qui va diminuer / var à retirer
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    subl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case mul: // Params : destination / var1 / var2
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    imull " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case rmem: // Params : destination / adresse à lire / offset potentiel (tableau)
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            if (params.size() == 3) {
-                o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            }
-            o << "    movl (%eax), %eax" << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case wmem: // Params : valeur / adresse à modifier / offset potentiel (tableau)
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;
-            if (params.size() == 3) {
-                o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %ebx" << endl;
-                o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %ebx" << endl;
-                o << "    movl %eax, (%ebx)" << endl;
-            } else {
-                o << "    movl %eax, (" << bb->cfg->IR_reg_to_asm(params[1]) << ")" << endl;
-            }
-            break;
-        case call: // Params : nom de la fonction / variable qui va stocker le retour de la fonction / paramètres de la fonction
-            string regs[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
-            for (int i = 0; i < params.size() - 2 && i < 6; i++) {
-                o << "    movl " << bb->cfg->IR_reg_to_asm(params[i+2]) << ", " << regs[i] << endl;
-            }
-            o << "    call " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[1]) << endl;
-            break;
-        case cmp_eq: // Params : destination / var1 / var2
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            o << "    sete %al" << endl;
-            o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case cmp_lt: // Params : destination / var1 / var2 (on renvoie si var1 < var2)
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            o << "    setl %al" << endl;
-            o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
-        case cmp_le: // Params : destination / var1 / var2 (on renvoie si var1 > var2)
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            o << "    setg %al" << endl;
-            o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
+CFG::~CFG()
+{
+    for (int i = 0; i < bbs.size(); i++)
+    {
+        delete (bbs.back());
     }
 }
+
+BasicBlock::~BasicBlock()
+{
+    for (int i = 0; i < instrs.size(); i++)
+    {
+        delete (instrs.back());
+    }
+}
+
+void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> params)
+{
+    instrs.push_back(new IRInstr(this, op, t, params));
+}
+
+/*void BasicBlock::gen_asm(ostream &o)
+{
+    o << label << ":" << endl;
+    for (auto instr : instrs)
+    {
+        instr->gen_asm(o);
+    }
+    if (exit_true != nullptr)
+    {
+        o << "    jmp " << exit_true->label << endl;
+    }
+}*/
+
+IRInstr::IRInstr(BasicBlock *bb, Operation op, Type t, vector<string> params) : bb(bb), op(op), t(t), params(params) {}
+
+/*void IRInstr::gen_asm(ostream &o)
+{
+    switch (op)
+    {
+    case ldconst: // Params : destination / const
+        o << "    movl $" << params[1] << ", " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case copy: // Params : destination / variable à assigner
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case add: // Params : destination / var1 / var2
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case sub: // Params : destination / var qui va diminuer / var à retirer
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    subl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case mul: // Params : destination / var1 / var2
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    imull " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case rmem: // Params : destination / adresse à lire / offset potentiel (tableau)
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        if (params.size() == 3)
+        {
+            o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        }
+        o << "    movl (%eax), %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case wmem: // Params : valeur / adresse à modifier / offset potentiel (tableau)
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;
+        if (params.size() == 3)
+        {
+            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %ebx" << endl;
+            o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %ebx" << endl;
+            o << "    movl %eax, (%ebx)" << endl;
+        }
+        else
+        {
+            o << "    movl %eax, (" << bb->cfg->IR_reg_to_asm(params[1]) << ")" << endl;
+        }
+        break;
+    case call: // Params : nom de la fonction / variable qui va stocker le retour de la fonction / paramètres de la fonction
+        string regs[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
+        for (int i = 0; i < params.size() - 2 && i < 6; i++)
+        {
+            o << "    movl " << bb->cfg->IR_reg_to_asm(params[i + 2]) << ", " << regs[i] << endl;
+        }
+        o << "    call " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[1]) << endl;
+        break;
+    case cmp_eq: // Params : destination / var1 / var2
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    sete %al" << endl;
+        o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case cmp_lt: // Params : destination / var1 / var2 (on renvoie si var1 < var2)
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    setl %al" << endl;
+        o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case cmp_le: // Params : destination / var1 / var2 (on renvoie si var1 > var2)
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    setg %al" << endl;
+        o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    }
+}*/

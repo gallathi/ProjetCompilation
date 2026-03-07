@@ -2,8 +2,9 @@
 int main()
 {
     int a;
-    a = 12;
     int b;
+    b = 12;
     a = b;
-    return b;
+
+    return a;
 }

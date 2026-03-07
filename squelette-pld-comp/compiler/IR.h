@@ -22,6 +22,7 @@ class IRInstr
 {
 
 public:
+	friend class BasicBlock;
 	/** The instructions themselves -- feel free to subclass instead */
 	typedef enum
 	{
@@ -38,13 +39,43 @@ public:
 		cmp_le
 	} Operation;
 
+	static string op_to_string(IRInstr::Operation op)
+	{
+		switch (op)
+		{
+		case IRInstr::ldconst:
+			return "ldconst";
+		case IRInstr::copy:
+			return "copy";
+		case IRInstr::add:
+			return "add";
+		case IRInstr::sub:
+			return "sub";
+		case IRInstr::mul:
+			return "mul";
+		case IRInstr::rmem:
+			return "rmem";
+		case IRInstr::wmem:
+			return "wmem";
+		case IRInstr::call:
+			return "call";
+		case IRInstr::cmp_eq:
+			return "cmp_eq";
+		case IRInstr::cmp_lt:
+			return "cmp_lt";
+		case IRInstr::cmp_le:
+			return "cmp_le";
+		}
+
+		return "unknown";
+	}
+
 	/**  constructor */
 	IRInstr(BasicBlock *bb_, Operation op, Type t, vector<string> params);
 
 	/** Actual code generation */
 	void gen_asm(ostream &o); /**< x86 assembly code generation for this IR instruction */
 
-private:
 	BasicBlock *bb; /**< The BB this instruction belongs to, which provides a pointer to the CFG this instruction belong to */
 	Operation op;
 	Type t;
@@ -86,6 +117,22 @@ public:
 	void gen_asm(ostream &o); /**< x86 assembly code generation for this basic block (very simple) */
 
 	void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params);
+
+	// overload cout for the basic block for debug
+	friend ostream &operator<<(ostream &os, const BasicBlock &bb)
+	{
+		os << "BasicBlock " << bb.label << " : " << endl;
+		for (auto instr : bb.instrs)
+		{
+			os << "    " << IRInstr::op_to_string(instr->op) << " ";
+			for (auto param : instr->params)
+			{
+				os << param << " ";
+			}
+			os << endl;
+		}
+		return os;
+	}
 
 	// No encapsulation whatsoever here. Feel free to do better.
 	BasicBlock *exit_true;	  /**< pointer to the next basic block, true branch. If nullptr, return from procedure */
@@ -130,6 +177,17 @@ public:
 	// basic block management
 	string new_BB_name();
 	BasicBlock *current_bb;
+
+	// overload cout for the CFG for printing basic blocks for debug
+	friend ostream &operator<<(ostream &os, const CFG &cfg)
+	{
+		os << "CFG : " << endl;
+		for (auto bb : cfg.bbs)
+		{
+			os << *bb << endl;
+		}
+		return os;
+	}
 
 protected:
 	map<string, Type> SymbolType; /**< part of the symbol table  */

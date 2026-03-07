@@ -1,82 +1,76 @@
 #include "CodeGenVisitor.h"
+#include "IR.h"
+#include "type.h"
+
+using namespace std;
+
+CFG cfg;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
-#ifdef __APPLE__
-	std::cout << ".globl _main\n";
-	std::cout << " _main: \n";
-#else
-	std::cout << ".globl main\n";
-	std::cout << " main: \n";
-#endif
 
-	// Prologue
-	std::cout << "    pushq %rbp\n";
-	std::cout << "    movq %rsp, %rbp\n";
-
-	// Parcours du code
-	// if (ctx->block() != nullptr)
-	//{
 	visit(ctx->block());
 
-	// visit(ctx->return_stmt());
+	cout << cfg;
 
-	// Epilogue
-	std::cout << "    popq %rbp\n";
-	std::cout << "    ret\n";
-
-#ifndef __APPLE__
-	std::cout << ".section .note.GNU-stack,\"\",@progbits\n";
-#endif
-
-	return 0;
+	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
+	BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
+	cfg.add_bb(bb);
+	cfg.current_bb = bb;
 	for (auto s : ctx->stmt())
 	{
 		visit(s);
 	}
 	visit(ctx->return_stmt());
 
-	return 0;
+	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
 {
 	std::string varName = ctx->VAR()->getText();
 	int varIndex = varTable[varName].index;
-	visit(ctx->expression());
-	std::cout << "    movl %eax, -" << varIndex << "(%rbp)" << std::endl;
-	return 0;
+	string value = std::any_cast<string>(visit(ctx->expression()));
+	// std::cout << "    movl %eax, -" << varIndex << "(%rbp)" << std::endl;
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
+
+	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
 {
 	visit(ctx->expression());
-	return 0;
+	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 {
-	std::cout << "    movl $" << ctx->CONST()->getText() << ", %eax" << std::endl;
-	return 0;
+	string tempVar = cfg.create_new_tempvar(Type::INT);
+	string varName = ctx->CONST()->getText();
+	int varIndex = varTable[varName].index;
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, ctx->CONST()->getText()});
+	return tempVar;
 }
 
 antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 {
-	std::string varName = ctx->VAR()->getText();
+	string tempVar = cfg.create_new_tempvar(Type::INT);
+	string varName = ctx->VAR()->getText();
 	int varIndex = varTable[varName].index;
-	std::cout << "    movl -" << varIndex << "(%rbp), %eax" << std::endl;
-	return 0;
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {tempVar, varName});
+
+	return tempVar;
 }
 
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
 	visit(ctx->expression());
 	std::cout << "    negl %eax" << std::endl;
-	return 0;
+	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
@@ -96,7 +90,7 @@ antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 		std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
 	}
 	nextIndex -= 4;
-	return 0;
+	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
@@ -126,5 +120,5 @@ antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 		std::cout << "    movl %edx, %eax" << std::endl;
 	}
 	nextIndex -= 4;
-	return 0;
+	return antlrcpp::Any();
 }
