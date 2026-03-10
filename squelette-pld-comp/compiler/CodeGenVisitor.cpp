@@ -10,6 +10,7 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
 
 	visit(ctx->block());
+	visit(ctx->return_stmt());
 
 	cout << cfg;
 
@@ -25,7 +26,6 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 	{
 		visit(s);
 	}
-	visit(ctx->return_stmt());
 
 	return antlrcpp::Any();
 }
@@ -43,7 +43,8 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 
 antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
 {
-	visit(ctx->expression());
+	string value = std::any_cast<string>(visit(ctx->expression()));
+	cfg.current_bb->add_IRInstr(IRInstr::return_instr, Type::INT, {value});
 	return antlrcpp::Any();
 }
 

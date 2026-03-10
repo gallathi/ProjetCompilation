@@ -36,7 +36,8 @@ public:
 		call,
 		cmp_eq,
 		cmp_lt,
-		cmp_le
+		cmp_le,
+		return_instr,
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
@@ -65,6 +66,8 @@ public:
 			return "cmp_lt";
 		case IRInstr::cmp_le:
 			return "cmp_le";
+		case IRInstr::return_instr:
+			return "return_instr";
 		}
 
 		return "unknown";

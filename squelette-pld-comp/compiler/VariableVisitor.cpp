@@ -21,6 +21,7 @@ antlrcpp::Any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
 
 	visit(ctx->block());
+	visit(ctx->return_stmt());
 
 	// vérifie variables non utilisées
 	bool allUsed = true;
@@ -47,7 +48,6 @@ antlrcpp::Any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 	{
 		visit(s);
 	}
-	visit(ctx->return_stmt());
 
 	return 0;
 }
