@@ -9,6 +9,10 @@ int conteurCFG = 0;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
+    for (const auto& [name, info] : varTable) {
+        cfg.add_to_symbol_table(name, Type::INT);
+    }
+
 	cfg.gen_asm_prologue(cout);
 	visit(ctx->block());
 	cfg.gen_asm(cout);
