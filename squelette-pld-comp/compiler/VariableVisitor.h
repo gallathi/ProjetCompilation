@@ -24,6 +24,10 @@ public:
 	virtual std::any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override;
 	virtual std::any visitProg(ifccParser::ProgContext *ctx) override;
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx) override;
+	virtual std::any visitConst(ifccParser::ConstContext *ctx) override;
+	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
+	virtual std::any visitAddsub(ifccParser::AddsubContext *ctx) override;
+	virtual std::any visitMuldiv(ifccParser::MuldivContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();

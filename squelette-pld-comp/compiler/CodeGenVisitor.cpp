@@ -5,13 +5,13 @@
 using namespace std;
 
 CFG cfg;
-int compteurCFG = 0;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
-    for (const auto& [name, info] : varTable) {
-        cfg.add_to_symbol_table(name, Type::INT);
-    }
+	for (const auto &[name, info] : varTable)
+	{
+		cfg.add_to_symbol_table(name, Type::INT);
+	}
 
 	cfg.gen_asm_prologue(cout);
 	visit(ctx->block());
@@ -58,7 +58,7 @@ antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 	string tempVar = cfg.create_new_tempvar(Type::INT);
 	cfg.add_to_symbol_table(tempVar, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, ctx->CONST()->getText()});
-	compteurCFG += 4;
+
 	return tempVar;
 }
 
@@ -70,7 +70,7 @@ antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
-	compteurCFG += 4;
+
 	string rhs = std::any_cast<string>(visit(ctx->expression())); // operand result
 	string out = cfg.create_new_tempvar(Type::INT);
 	cfg.add_to_symbol_table(out, Type::INT);
@@ -80,7 +80,6 @@ antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
-	compteurCFG += 4;
 
 	// char op = ctx->op->getText()[0];
 	// visit(ctx->expression(0));
@@ -117,7 +116,6 @@ antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 {
-	compteurCFG += 4;
 
 	// char op = ctx->op->getText()[0];
 	// visit(ctx->expression(0));

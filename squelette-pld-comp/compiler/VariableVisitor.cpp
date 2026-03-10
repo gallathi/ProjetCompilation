@@ -9,6 +9,8 @@ std::stack<std::pair<std::string, int>> s;
 
 int currentBlock;
 
+int compteurCFG = 0;
+
 bool checkIfVarInStack(std::string var)
 {
 	std::stack<std::pair<std::string, int>> tempStack = s;
@@ -151,7 +153,8 @@ antlrcpp::Any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
 	}
 	else if (!varTable[var].affected)
 	{
-		std::cout << "ERREUR : La variable " << var << " est utilisée avant afféctation." << std::endl;
+		if (debug)
+			std::cout << "ERREUR : La variable " << var << " est utilisée avant afféctation." << std::endl;
 		errorCount++;
 		return 0;
 	}
@@ -178,5 +181,28 @@ antlrcpp::Any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *
 	visit(ctx->expression());
 	bool allUsed = true;
 
+	return 0;
+}
+antlrcpp::Any VariableVisitor::visitConst(ifccParser::ConstContext *ctx)
+{
+	compteurCFG += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
+{
+	compteurCFG += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
+{
+	compteurCFG += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
+{
+	compteurCFG += 4;
 	return 0;
 }
