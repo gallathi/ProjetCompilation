@@ -26,7 +26,7 @@ void CFG::gen_asm_epilogue(ostream &o)
 #endif
 }
 
-/*void CFG::gen_asm(ostream &o)
+void CFG::gen_asm(ostream &o)
 {
     current_bb = bbs[0];
     current_bb->gen_asm(o);
@@ -34,7 +34,7 @@ void CFG::gen_asm_epilogue(ostream &o)
     {
         current_bb = current_bb->exit_true;
     }
-}*/
+}
 
 string CFG::IR_reg_to_asm(string reg)
 {
@@ -98,7 +98,7 @@ void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> param
     instrs.push_back(new IRInstr(this, op, t, params));
 }
 
-/*void BasicBlock::gen_asm(ostream &o)
+void BasicBlock::gen_asm(ostream &o)
 {
     o << label << ":" << endl;
     for (auto instr : instrs)
@@ -109,12 +109,13 @@ void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> param
     {
         o << "    jmp " << exit_true->label << endl;
     }
-}*/
+}
 
 IRInstr::IRInstr(BasicBlock *bb, Operation op, Type t, vector<string> params) : bb(bb), op(op), t(t), params(params) {}
 
-/*void IRInstr::gen_asm(ostream &o)
+void IRInstr::gen_asm(ostream &o)
 {
+    string regs[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
     switch (op)
     {
     case ldconst: // Params : destination / const
@@ -162,7 +163,6 @@ IRInstr::IRInstr(BasicBlock *bb, Operation op, Type t, vector<string> params) : 
         }
         break;
     case call: // Params : nom de la fonction / variable qui va stocker le retour de la fonction / paramètres de la fonction
-        string regs[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
         for (int i = 0; i < params.size() - 2 && i < 6; i++)
         {
             o << "    movl " << bb->cfg->IR_reg_to_asm(params[i + 2]) << ", " << regs[i] << endl;
@@ -189,4 +189,4 @@ IRInstr::IRInstr(BasicBlock *bb, Operation op, Type t, vector<string> params) : 
         o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
         break;
     }
-}*/
+}

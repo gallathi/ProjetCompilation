@@ -8,11 +8,7 @@ CFG cfg;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
-
 	visit(ctx->block());
-
-	cout << cfg;
-
 	return antlrcpp::Any();
 }
 
@@ -35,7 +31,6 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 	std::string varName = ctx->VAR()->getText();
 	int varIndex = varTable[varName].index;
 	string value = std::any_cast<string>(visit(ctx->expression()));
-	// std::cout << "    movl %eax, -" << varIndex << "(%rbp)" << std::endl;
 	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
 
 	return antlrcpp::Any();

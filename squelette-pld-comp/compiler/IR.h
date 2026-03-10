@@ -118,22 +118,6 @@ public:
 
 	void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params);
 
-	// overload cout for the basic block for debug
-	friend ostream &operator<<(ostream &os, const BasicBlock &bb)
-	{
-		os << "BasicBlock " << bb.label << " : " << endl;
-		for (auto instr : bb.instrs)
-		{
-			os << "    " << IRInstr::op_to_string(instr->op) << " ";
-			for (auto param : instr->params)
-			{
-				os << param << " ";
-			}
-			os << endl;
-		}
-		return os;
-	}
-
 	// No encapsulation whatsoever here. Feel free to do better.
 	BasicBlock *exit_true;	  /**< pointer to the next basic block, true branch. If nullptr, return from procedure */
 	BasicBlock *exit_false;	  /**< pointer to the next basic block, false branch. If null_ptr, the basic block ends with an unconditional jump */
@@ -177,17 +161,6 @@ public:
 	// basic block management
 	string new_BB_name();
 	BasicBlock *current_bb;
-
-	// overload cout for the CFG for printing basic blocks for debug
-	friend ostream &operator<<(ostream &os, const CFG &cfg)
-	{
-		os << "CFG : " << endl;
-		for (auto bb : cfg.bbs)
-		{
-			os << *bb << endl;
-		}
-		return os;
-	}
 
 protected:
 	map<string, Type> SymbolType; /**< part of the symbol table  */
