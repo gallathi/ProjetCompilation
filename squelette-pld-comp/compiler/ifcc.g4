@@ -2,7 +2,7 @@ grammar ifcc;
 
 axiom : prog EOF ;
 
-prog : 'int' 'main' '(' ')' block return_stmt;
+prog : 'int' 'main' '(' ')' block;
 
 block
     : '{' stmt* '}'
