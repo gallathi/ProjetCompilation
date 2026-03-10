@@ -15,8 +15,6 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 
 	visit(ctx->block());
 
-	cout << cfg;
-
 	return antlrcpp::Any();
 }
 
