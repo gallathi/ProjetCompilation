@@ -12,6 +12,12 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     visit(ctx->block());
     cfg.gen_asm(cout);
     cfg.gen_asm_epilogue(cout);
+
+	visit(ctx->block());
+	visit(ctx->return_stmt());
+
+	cout << cfg;
+
 	return antlrcpp::Any();
 }
 
@@ -24,7 +30,6 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 	{
 		visit(s);
 	}
-	visit(ctx->return_stmt());
 
 	return antlrcpp::Any();
 }
@@ -41,7 +46,8 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 
 antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
 {
-	visit(ctx->expression());
+	string value = std::any_cast<string>(visit(ctx->expression()));
+	cfg.current_bb->add_IRInstr(IRInstr::return_instr, Type::INT, {value});
 	return antlrcpp::Any();
 }
 
@@ -64,57 +70,95 @@ antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
-	visit(ctx->expression());
-	std::cout << "    negl %eax" << std::endl;
-	return antlrcpp::Any();
+	string rhs = std::any_cast<string>(visit(ctx->expression())); // operand result
+    // 0 constant temporary
+    string zero = cfg.create_new_tempvar(Type::INT);
+    cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
+    // result temp for negation
+    string out = cfg.create_new_tempvar(Type::INT);
+    cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {out, zero, rhs});
+
+    return out;
 }
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
+	
+	//char op = ctx->op->getText()[0];
+	//visit(ctx->expression(0));
+	//std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
+	//nextIndex += 4;
+	//visit(ctx->expression(1));
+	//if (op == '+')
+	//{
+	//	std::cout << "    addl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+	//}
+	//else if (op == '-')
+	//{
+	//	std::cout << "    subl %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
+	//	std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+	//}
+	//nextIndex -= 4;
+	//return antlrcpp::Any();
+	
 	char op = ctx->op->getText()[0];
-	visit(ctx->expression(0));
-	std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
-	nextIndex += 4;
-	visit(ctx->expression(1));
+	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+	string out = cfg.create_new_tempvar(Type::INT);
 	if (op == '+')
 	{
-		std::cout << "    addl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+		cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {out, lhs, rhs});
 	}
 	else if (op == '-')
 	{
-		std::cout << "    subl %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
-		std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+		cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {out, lhs, rhs});
 	}
-	nextIndex -= 4;
-	return antlrcpp::Any();
+	return out;
 }
 
 antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 {
+	//char op = ctx->op->getText()[0];
+	//visit(ctx->expression(0));
+	//std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
+	//nextIndex += 4;
+	//visit(ctx->expression(1));
+	//if (op == '*')
+	//{
+	//	std::cout << "    imull -" << nextIndex - 4 << "(%rbp)" << std::endl;
+	//}
+	//else if (op == '/')
+	//{
+	//	std::cout << "    movl $0, %edx" << std::endl;
+	//	std::cout << "    movl %eax, %ecx" << std::endl;
+	//	std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+	//	std::cout << "    idiv %ecx" << std::endl;
+	//}
+	//else if (op == '%')
+	//{
+	//	std::cout << "    movl $0, %edx" << std::endl;
+	//	std::cout << "    movl %eax, %ecx" << std::endl;
+	//	std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
+	//	std::cout << "    idiv %ecx" << std::endl;
+	//	std::cout << "    movl %edx, %eax" << std::endl;
+	//}
+	//nextIndex -= 4;
+	//return antlrcpp::Any();
 	char op = ctx->op->getText()[0];
-	visit(ctx->expression(0));
-	std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
-	nextIndex += 4;
-	visit(ctx->expression(1));
+	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+	string out = cfg.create_new_tempvar(Type::INT);
 	if (op == '*')
 	{
-		std::cout << "    imull -" << nextIndex - 4 << "(%rbp)" << std::endl;
+		cfg.current_bb->add_IRInstr(IRInstr::mul, Type::INT, {out, lhs, rhs});
 	}
 	else if (op == '/')
 	{
-		std::cout << "    movl $0, %edx" << std::endl;
-		std::cout << "    movl %eax, %ecx" << std::endl;
-		std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-		std::cout << "    idiv %ecx" << std::endl;
+		cfg.current_bb->add_IRInstr(IRInstr::div, Type::INT, {out, lhs, rhs});
 	}
 	else if (op == '%')
 	{
-		std::cout << "    movl $0, %edx" << std::endl;
-		std::cout << "    movl %eax, %ecx" << std::endl;
-		std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-		std::cout << "    idiv %ecx" << std::endl;
-		std::cout << "    movl %edx, %eax" << std::endl;
+		cfg.current_bb->add_IRInstr(IRInstr::mod, Type::INT, {out, lhs, rhs});
 	}
-	nextIndex -= 4;
-	return antlrcpp::Any();
+	return out;
 }

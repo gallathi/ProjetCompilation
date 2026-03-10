@@ -2,10 +2,10 @@ grammar ifcc;
 
 axiom : prog EOF ;
 
-prog : 'int' 'main' '(' ')' block ;
+prog : 'int' 'main' '(' ')' block return_stmt;
 
 block
-    : '{' stmt* return_stmt '}'
+    : '{' stmt* '}'
     ;
 
 stmt 
@@ -14,6 +14,7 @@ stmt
     | affectation 
     | return_stmt
     | affectation_declaration
+    | block
     ; 
 
 
