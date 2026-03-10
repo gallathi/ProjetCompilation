@@ -8,13 +8,16 @@ CFG cfg;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
+    for (const auto& [name, info] : varTable) {
+        cfg.add_to_symbol_table(name, Type::INT);
+    }
+
 	cfg.gen_asm_prologue(cout);
 	visit(ctx->block());
 	cfg.gen_asm(cout);
 	cfg.gen_asm_epilogue(cout);
 
 	visit(ctx->block());
-	visit(ctx->return_stmt());
 	return antlrcpp::Any();
 }
 
@@ -52,18 +55,15 @@ antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *c
 antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 {
 	string tempVar = cfg.create_new_tempvar(Type::INT);
-	string varName = ctx->CONST()->getText();
+	cfg.add_to_symbol_table(tempVar, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, ctx->CONST()->getText()});
 	return tempVar;
 }
 
 antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 {
-	string tempVar = cfg.create_new_tempvar(Type::INT);
 	string varName = ctx->VAR()->getText();
-	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {tempVar, varName});
-
-	return tempVar;
+	return varName;
 }
 
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
@@ -71,9 +71,11 @@ antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 	string rhs = std::any_cast<string>(visit(ctx->expression())); // operand result
 	// 0 constant temporary
 	string zero = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(zero, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
 	// result temp for negation
 	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {out, zero, rhs});
 
 	return out;
@@ -103,6 +105,7 @@ antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
 	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
 	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
 	if (op == '+')
 	{
 		cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {out, lhs, rhs});
@@ -146,6 +149,7 @@ antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
 	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
 	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
 	if (op == '*')
 	{
 		cfg.current_bb->add_IRInstr(IRInstr::mul, Type::INT, {out, lhs, rhs});

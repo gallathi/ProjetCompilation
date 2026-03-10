@@ -45,13 +45,12 @@ void CFG::add_to_symbol_table(string name, Type t)
 {
     SymbolType[name] = t;
     SymbolIndex[name] = nextFreeSymbolIndex;
-    nextFreeSymbolIndex++;
+    nextFreeSymbolIndex += 4;
 }
 
 string CFG::create_new_tempvar(Type t)
 {
     string newName = "!tmp" + to_string(nextFreeSymbolIndex);
-    ++nextFreeSymbolIndex;
     return newName;
 }
 
