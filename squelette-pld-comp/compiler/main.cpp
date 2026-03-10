@@ -49,7 +49,7 @@ int main(int argn, const char **argv)
     exit(1);
   }
 
-  bool debug = false;
+  bool debug = true;
   VariableVisitor vv(debug);
   vv.visit(tree);
 
