@@ -31,6 +31,8 @@ public:
 		add,
 		sub,
 		mul,
+		div,
+		mod,
 		rmem,
 		wmem,
 		call,
@@ -66,6 +68,10 @@ public:
 			return "cmp_lt";
 		case IRInstr::cmp_le:
 			return "cmp_le";
+		case IRInstr::div:
+			return "div";
+		case IRInstr::mod:
+			return "mod";
 		case IRInstr::return_instr:
 			return "return_instr";
 		}
