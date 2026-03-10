@@ -8,7 +8,10 @@ CFG cfg;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
-	visit(ctx->block());
+    cfg.gen_asm_prologue(cout);
+    visit(ctx->block());
+    cfg.gen_asm(cout);
+    cfg.gen_asm_epilogue(cout);
 	return antlrcpp::Any();
 }
 
