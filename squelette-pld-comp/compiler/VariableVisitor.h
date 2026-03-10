@@ -31,6 +31,7 @@ public:
 
 	int getErrorCount();
 	int getNextOffset();
+	int getCompteurVar();
 	std::map<std::string, varInfo> getVarTable();
 
 protected:
@@ -38,4 +39,5 @@ protected:
 	int nextIndex = 4;
 	int errorCount = 0;
 	bool debug;
+	int compteurVar = 0;
 };

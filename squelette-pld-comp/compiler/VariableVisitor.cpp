@@ -9,8 +9,6 @@ std::stack<std::pair<std::string, int>> s;
 
 int currentBlock;
 
-int compteurCFG = 0;
-
 bool checkIfVarInStack(std::string var)
 {
 	std::stack<std::pair<std::string, int>> tempStack = s;
@@ -38,6 +36,10 @@ int VariableVisitor::getErrorCount()
 int VariableVisitor::getNextOffset()
 {
 	return nextIndex;
+}
+
+int VariableVisitor::getCompteurVar() {
+	return compteurVar;
 }
 
 std::map<std::string, varInfo> VariableVisitor::getVarTable()
@@ -98,6 +100,7 @@ antlrcpp::Any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varC
 	varInfo info;
 	info.index = nextIndex;
 	nextIndex += 4;
+	compteurVar += 4;
 	info.used = false;
 	info.affected = false;
 	varTable[var] = info;
@@ -185,24 +188,24 @@ antlrcpp::Any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *
 }
 antlrcpp::Any VariableVisitor::visitConst(ifccParser::ConstContext *ctx)
 {
-	compteurCFG += 4;
+	compteurVar += 4;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
-	compteurCFG += 4;
+	compteurVar += 4;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
-	compteurCFG += 4;
+	compteurVar += 4;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 {
-	compteurCFG += 4;
+	compteurVar += 4;
 	return 0;
 }

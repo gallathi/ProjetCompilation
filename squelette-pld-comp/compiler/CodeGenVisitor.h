@@ -10,7 +10,7 @@
 class CodeGenVisitor : public ifccBaseVisitor
 {
 public:
-	CodeGenVisitor(std::map<std::string, varInfo> table, int index) : varTable(table), nextIndex(index) {}
+	CodeGenVisitor(std::map<std::string, varInfo> table, int index, int compteurVar) : varTable(table), nextIndex(index), compteurVar(compteurVar) {}
 	virtual ~CodeGenVisitor() {}
 	virtual std::any visitProg(ifccParser::ProgContext *ctx) override;
 	virtual std::any visitAffectation(ifccParser::AffectationContext *ctx) override;
@@ -25,4 +25,5 @@ public:
 protected:
 	std::map<std::string, varInfo> varTable;
 	int nextIndex;
+	int compteurVar;
 };

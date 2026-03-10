@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-void CFG::gen_asm_prologue(ostream &o)
+void CFG::gen_asm_prologue(ostream &o, int compteurVar)
 {
 #ifdef __APPLE__
     o << ".globl _main\n";
@@ -14,10 +14,12 @@ void CFG::gen_asm_prologue(ostream &o)
 
     o << "    pushq %rbp\n";
     o << "    movq %rsp, %rbp\n";
+    o << "    subq $" << compteurVar << ", %rsp" << endl;
 }
 
 void CFG::gen_asm_epilogue(ostream &o)
 {
+	o << "    movq %rbp, %rsp\n";
     o << "    popq %rbp\n";
     o << "    ret\n";
 
@@ -191,6 +193,9 @@ void IRInstr::gen_asm(ostream &o)
         o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
         o << "    setg %al" << endl;
         o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case return_instr: // Params : source
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;
         break;
     }
 }

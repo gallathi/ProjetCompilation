@@ -13,7 +13,7 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 		cfg.add_to_symbol_table(name, Type::INT);
 	}
 
-	cfg.gen_asm_prologue(cout);
+	cfg.gen_asm_prologue(cout, compteurVar);
 	visit(ctx->block());
 	cfg.gen_asm(cout);
 	cfg.gen_asm_epilogue(cout);

@@ -63,7 +63,7 @@ int main(int argn, const char **argv)
       cout << "Génération de code annulée." << endl;
     exit(1);
   }
-  CodeGenVisitor v(vv.getVarTable(), vv.getNextOffset());
+  CodeGenVisitor v(vv.getVarTable(), vv.getNextOffset(), vv.getCompteurVar());
   v.visit(tree);
 
   return 0;
