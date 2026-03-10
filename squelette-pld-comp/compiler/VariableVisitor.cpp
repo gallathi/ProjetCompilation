@@ -1,6 +1,27 @@
 #include "VariableVisitor.h"
 
 #include <iostream>
+#include <stack>
+#include <utility>
+#include <string>
+
+std::stack<std::pair<std::string, int>> s;
+
+int currentBlock;
+
+bool checkIfVarInStack(std::string var)
+{
+	std::stack<std::pair<std::string, int>> tempStack = s;
+	while (!tempStack.empty())
+	{
+		if (tempStack.top().first == var)
+		{
+			return true;
+		}
+		tempStack.pop();
+	}
+	return false;
+}
 
 int VariableVisitor::getErrorCount()
 {
@@ -21,7 +42,6 @@ antlrcpp::Any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
 
 	visit(ctx->block());
-	visit(ctx->return_stmt());
 
 	// vérifie variables non utilisées
 	bool allUsed = true;
@@ -44,14 +64,20 @@ antlrcpp::Any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
 
 antlrcpp::Any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
+
+	currentBlock++;
 	for (auto s : ctx->stmt())
 	{
 		visit(s);
 	}
-
+	// je veux iterer sur la stack pour enlever les variable du precedant block
+	while (!s.empty() && s.top().second == currentBlock)
+	{
+		s.pop();
+	}
+	currentBlock--;
 	return 0;
 }
-
 antlrcpp::Any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
 	std::string var = ctx->VAR()->getText();
@@ -68,6 +94,9 @@ antlrcpp::Any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varC
 	info.used = false;
 	info.affected = false;
 	varTable[var] = info;
+
+	s.push(std::make_pair(var, currentBlock));
+
 	if (debug)
 		std::cout << "déclaration de " << var << " : " << info.index << std::endl;
 	if (ctx->declaration_var() != nullptr)
@@ -86,6 +115,17 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 		errorCount++;
 		return 0;
 	}
+
+	bool declaredInEnclosingBlock = checkIfVarInStack(var);
+
+	if (!declaredInEnclosingBlock)
+	{
+		if (debug)
+			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
+		errorCount++;
+		return 0;
+	}
+
 	varTable[var].used = true;
 	varTable[var].affected = true;
 
@@ -110,6 +150,17 @@ antlrcpp::Any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
 		errorCount++;
 		return 0;
 	}
+
+	bool declaredInEnclosingBlock = checkIfVarInStack(var);
+
+	if (!declaredInEnclosingBlock)
+	{
+		if (debug)
+			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
+		errorCount++;
+		return 0;
+	}
+
 	varTable[var].used = true;
 	if (debug)
 		std::cout << "utilisation de la variable " << var << std::endl;
@@ -118,6 +169,7 @@ antlrcpp::Any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
 
 antlrcpp::Any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
 {
+
 	visit(ctx->expression());
 	bool allUsed = true;
 
