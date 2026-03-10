@@ -5,17 +5,20 @@
 using namespace std;
 
 CFG cfg;
-int conteurCFG = 0;
+int compteurCFG = 0;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
+    for (const auto& [name, info] : varTable) {
+        cfg.add_to_symbol_table(name, Type::INT);
+    }
+
 	cfg.gen_asm_prologue(cout);
 	visit(ctx->block());
 	cfg.gen_asm(cout);
 	cfg.gen_asm_epilogue(cout);
 
 	visit(ctx->block());
-
 	return antlrcpp::Any();
 }
 
@@ -28,7 +31,6 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 	{
 		visit(s);
 	}
-	// visit(ctx->return_stmt());
 
 	return antlrcpp::Any();
 }
@@ -39,7 +41,6 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 	int varIndex = varTable[varName].index;
 	string value = std::any_cast<string>(visit(ctx->expression()));
 	cfg.add_to_symbol_table(varName, Type::INT);
-	// std::cout << "    movl %eax, -" << varIndex << "(%rbp)" << std::endl;
 	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
 
 	return antlrcpp::Any();
@@ -55,39 +56,31 @@ antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *c
 antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 {
 	string tempVar = cfg.create_new_tempvar(Type::INT);
-	string varName = ctx->CONST()->getText();
+	cfg.add_to_symbol_table(tempVar, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, ctx->CONST()->getText()});
+	compteurCFG += 4;
 	return tempVar;
-	conteurCFG += 4;
 }
 
 antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 {
-	string tempVar = cfg.create_new_tempvar(Type::INT);
 	string varName = ctx->VAR()->getText();
-	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {tempVar, varName});
-
-	return tempVar;
+	return varName;
 }
 
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
-	conteurCFG += 4;
-
+	compteurCFG += 4;
 	string rhs = std::any_cast<string>(visit(ctx->expression())); // operand result
-	// 0 constant temporary
-	string zero = cfg.create_new_tempvar(Type::INT);
-	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
-	// result temp for negation
 	string out = cfg.create_new_tempvar(Type::INT);
-	cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {out, zero, rhs});
-
+	cfg.add_to_symbol_table(out, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::neg, Type::INT, {out, rhs});
 	return out;
 }
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
-	conteurCFG += 4;
+	compteurCFG += 4;
 
 	// char op = ctx->op->getText()[0];
 	// visit(ctx->expression(0));
@@ -110,6 +103,7 @@ antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
 	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
 	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
 	if (op == '+')
 	{
 		cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {out, lhs, rhs});
@@ -123,7 +117,7 @@ antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 {
-	conteurCFG += 4;
+	compteurCFG += 4;
 
 	// char op = ctx->op->getText()[0];
 	// visit(ctx->expression(0));
@@ -155,6 +149,7 @@ antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
 	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
 	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
 	if (op == '*')
 	{
 		cfg.current_bb->add_IRInstr(IRInstr::mul, Type::INT, {out, lhs, rhs});

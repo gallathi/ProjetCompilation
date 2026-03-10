@@ -30,6 +30,7 @@ public:
 		copy,
 		add,
 		sub,
+		neg,
 		mul,
 		div,
 		mod,
@@ -54,6 +55,8 @@ public:
 			return "add";
 		case IRInstr::sub:
 			return "sub";
+	    case IRInstr::neg:
+        	return "neg";
 		case IRInstr::mul:
 			return "mul";
 		case IRInstr::rmem:
