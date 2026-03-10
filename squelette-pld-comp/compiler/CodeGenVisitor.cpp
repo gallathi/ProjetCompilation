@@ -69,15 +69,9 @@ antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
 	string rhs = std::any_cast<string>(visit(ctx->expression())); // operand result
-	// 0 constant temporary
-	string zero = cfg.create_new_tempvar(Type::INT);
-	cfg.add_to_symbol_table(zero, Type::INT);
-	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
-	// result temp for negation
 	string out = cfg.create_new_tempvar(Type::INT);
 	cfg.add_to_symbol_table(out, Type::INT);
-	cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {out, zero, rhs});
-
+	cfg.current_bb->add_IRInstr(IRInstr::neg, Type::INT, {out, rhs});
 	return out;
 }
 
