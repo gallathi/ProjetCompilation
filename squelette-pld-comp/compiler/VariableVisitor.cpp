@@ -12,14 +12,19 @@ int currentBlock;
 bool checkIfVarInStack(std::string var)
 {
 	std::stack<std::pair<std::string, int>> tempStack = s;
+
 	while (!tempStack.empty())
 	{
-		if (tempStack.top().first == var)
+		auto top = tempStack.top();
+
+		if (top.first == var)
 		{
 			return true;
 		}
+
 		tempStack.pop();
 	}
+
 	return false;
 }
 

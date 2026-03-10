@@ -5,6 +5,7 @@
 using namespace std;
 
 CFG cfg;
+int conteurCFG = 0;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
@@ -57,6 +58,7 @@ antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 	string varName = ctx->CONST()->getText();
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, ctx->CONST()->getText()});
 	return tempVar;
+	conteurCFG += 4;
 }
 
 antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
@@ -70,6 +72,8 @@ antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
+	conteurCFG += 4;
+
 	string rhs = std::any_cast<string>(visit(ctx->expression())); // operand result
 	// 0 constant temporary
 	string zero = cfg.create_new_tempvar(Type::INT);
@@ -83,6 +87,7 @@ antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
+	conteurCFG += 4;
 
 	// char op = ctx->op->getText()[0];
 	// visit(ctx->expression(0));
@@ -118,6 +123,8 @@ antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 {
+	conteurCFG += 4;
+
 	// char op = ctx->op->getText()[0];
 	// visit(ctx->expression(0));
 	// std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
