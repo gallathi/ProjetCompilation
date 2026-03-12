@@ -35,7 +35,19 @@ expression 	: '(' expression ')'                            #par
             | expression BITWISE_OR expression				#bitwise_or 
            	| VAR '=' expression						    #affectation
            	| CONST                                         #const
-           	| VAR                                           #var;
+            | CHARCONST                                   #charconst
+           	| VAR                                           #var
+            ;
+
+
+CHARCONST
+    : '\'' ( ~['\\\r\n] | EscapeSequence )+ '\'' ;
+
+fragment EscapeSequence
+    : '\\' [nrt'\\]
+    | '\\x' [0-9a-fA-F]+
+    | '\\' [0-7]+
+    ;
 
 CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;

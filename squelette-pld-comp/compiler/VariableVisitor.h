@@ -28,6 +28,7 @@ public:
 	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
 	virtual std::any visitAddsub(ifccParser::AddsubContext *ctx) override;
 	virtual std::any visitMuldiv(ifccParser::MuldivContext *ctx) override;
+	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();
