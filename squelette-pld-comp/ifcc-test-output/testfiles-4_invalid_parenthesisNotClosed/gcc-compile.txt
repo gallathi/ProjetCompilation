@@ -1,0 +1,5 @@
+input.c:1:11: error: expected declaration specifiers or ‘...’ before ‘{’ token
+    1 | int main( {
+      |           ^
+
+exit status: 1

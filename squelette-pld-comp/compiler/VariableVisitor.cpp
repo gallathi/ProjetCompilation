@@ -192,6 +192,12 @@ antlrcpp::Any VariableVisitor::visitConst(ifccParser::ConstContext *ctx)
 	return 0;
 }
 
+antlrcpp::Any VariableVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
 antlrcpp::Any VariableVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
 	compteurVar += 4;

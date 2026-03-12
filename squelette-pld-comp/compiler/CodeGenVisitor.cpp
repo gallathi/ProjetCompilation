@@ -17,8 +17,6 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 	visit(ctx->block());
 	cfg.gen_asm(cout);
 	cfg.gen_asm_epilogue(cout);
-
-	visit(ctx->block());
 	return antlrcpp::Any();
 }
 
@@ -173,4 +171,43 @@ antlrcpp::Any CodeGenVisitor::visitEq(ifccParser::EqContext *ctx)
 		cfg.current_bb->add_IRInstr(IRInstr::cmp_neq, Type::INT, {out, lhs, rhs});
 	}
 	return out;
+}
+static int unescapeChar(const std::string &s) {
+    // Remove the surrounding single quotes
+    // 'a' -> a, '\n' -> \n, 'abc' -> abc
+    std::string content = s.substr(1, s.size() - 2);
+    
+    int result = 0;
+
+    for (size_t i = 0; i < content.size(); ++i) {
+        int currentChar = 0;
+        if (content[i] == '\\' && i + 1 < content.size()) {
+            i++; // Move to the escaped character
+            switch (content[i]) {
+                case 'n':  currentChar = '\n'; break;
+                case 't':  currentChar = '\t'; break;
+                case 'r':  currentChar = '\r'; break;
+                case '\\': currentChar = '\\'; break;
+                case '\'': currentChar = '\''; break;
+                case '0':  currentChar = '\0'; break;
+                default:   currentChar = content[i]; break;
+            }
+        } else {
+            currentChar = (unsigned char)content[i];
+        }
+
+        result = (result << 8) | currentChar;
+    }
+    return result;
+}
+
+antlrcpp::Any CodeGenVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
+{
+	string charLiteral = ctx->CHARCONST()->getText();
+	int charValue = unescapeChar(charLiteral);
+	string tempVar = cfg.create_new_tempvar(Type::CHAR);
+	cfg.add_to_symbol_table(tempVar, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, to_string(charValue)});
+
+	return tempVar;
 }

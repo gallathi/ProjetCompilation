@@ -1,0 +1,6 @@
+line 2:8 no viable alternative at input 'int 1'
+line 2:12 extraneous input ';' expecting {'int', '{', '}', 'return', VAR}
+line 3:12 extraneous input 'var' expecting ';'
+error: syntax error during parsing
+
+exit status: 1

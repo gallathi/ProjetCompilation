@@ -32,7 +32,19 @@ expression 	: '(' expression ')'                            #par
             | expression op=('=='|'!=') expression          #eq
            	| VAR '=' expression						    #affectation
            	| CONST                                         #const
-           	| VAR                                           #var;
+            | CHARCONST                                   #charconst
+           	| VAR                                           #var
+            ;
+
+
+CHARCONST
+    : '\'' ( ~['\\\r\n] | EscapeSequence )+ '\'' ;
+
+fragment EscapeSequence
+    : '\\' [nrt'\\]
+    | '\\x' [0-9a-fA-F]+
+    | '\\' [0-7]+
+    ;
 
 CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
