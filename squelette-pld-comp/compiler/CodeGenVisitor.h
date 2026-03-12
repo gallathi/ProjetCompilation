@@ -19,6 +19,8 @@ public:
 	virtual std::any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override;
 	virtual std::any visitAddsub(ifccParser::AddsubContext *ctx) override;
 	virtual std::any visitMuldiv(ifccParser::MuldivContext *ctx) override;
+	virtual std::any visitComp(ifccParser::CompContext *ctx) override;
+	virtual std::any visitEq(ifccParser::EqContext *ctx) override;
 	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx);
 	virtual std::any visitPar(ifccParser::ParContext *ctx) override;

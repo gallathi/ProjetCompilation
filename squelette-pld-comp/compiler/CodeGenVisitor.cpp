@@ -122,3 +122,47 @@ antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 	}
 	return out;
 }
+
+antlrcpp::Any CodeGenVisitor::visitComp(ifccParser::CompContext *ctx)
+{
+	string op = ctx->op->getText();
+	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
+	if (op == "<=")
+    {
+        cfg.current_bb->add_IRInstr(IRInstr::cmp_elt, Type::INT, {out, lhs, rhs});
+    }
+    else if (op == "<")
+    {
+        cfg.current_bb->add_IRInstr(IRInstr::cmp_lt, Type::INT, {out, lhs, rhs});
+    }
+    else if (op == ">=")
+    {
+        cfg.current_bb->add_IRInstr(IRInstr::cmp_egt, Type::INT, {out, lhs, rhs});
+    }
+    else if (op == ">")
+    {
+        cfg.current_bb->add_IRInstr(IRInstr::cmp_gt, Type::INT, {out, lhs, rhs});
+    }
+	return out;
+}
+
+antlrcpp::Any CodeGenVisitor::visitEq(ifccParser::EqContext *ctx)
+{
+	string op = ctx->op->getText();
+	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
+	if (op == "==")
+	{
+		cfg.current_bb->add_IRInstr(IRInstr::cmp_eq, Type::INT, {out, lhs, rhs});
+	}
+	else if (op == "!=")
+	{
+		cfg.current_bb->add_IRInstr(IRInstr::cmp_neq, Type::INT, {out, lhs, rhs});
+	}
+	return out;
+}

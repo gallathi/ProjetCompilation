@@ -38,8 +38,11 @@ public:
 		wmem,
 		call,
 		cmp_eq,
+		cmp_neq,
 		cmp_lt,
-		cmp_le,
+		cmp_gt,
+		cmp_elt,
+        cmp_egt,
 		return_instr,
 	} Operation;
 
@@ -67,10 +70,16 @@ public:
 			return "call";
 		case IRInstr::cmp_eq:
 			return "cmp_eq";
+		case IRInstr::cmp_neq:
+            return "cmp_neq";
 		case IRInstr::cmp_lt:
 			return "cmp_lt";
-		case IRInstr::cmp_le:
-			return "cmp_le";
+		case IRInstr::cmp_gt:
+			return "cmp_gt";
+        case IRInstr::cmp_elt:
+            return "cmp_elt";
+        case IRInstr::cmp_egt:
+            return "cmp_egt";
 		case IRInstr::div:
 			return "div";
 		case IRInstr::mod:

@@ -26,14 +26,14 @@ return_stmt : 'return' expression ';' ;
 affectation_declaration: 'int' VAR '=' expression ';' ;
 
 
-expression : '(' expression ')'                         #par
-           | MINUS expression                           #opposite
-           | expression op=(MUL|DIV|MOD) expression     #muldiv
-           | expression op=(PLUS|MINUS) expression      #addsub
-           | CONST                                      #const
-           | VAR                                        #var;
-
-
+expression : '(' expression ')'                                                         #par
+           | MINUS expression                                                           #opposite
+           | expression op=(MUL|DIV|MOD) expression                                     #muldiv
+           | expression op=(PLUS|MINUS) expression                                      #addsub
+           | expression op=('<='|'<'|'>='|'>') expression                               #comp
+           | expression op=('=='|'!=') expression                                       #eq
+           | CONST                                                                      #const
+           | VAR                                                                        #var;
 
 CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
