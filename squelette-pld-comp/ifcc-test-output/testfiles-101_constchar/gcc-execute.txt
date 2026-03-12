@@ -1,3 +1,0 @@
-Character: z
-
-exit status: 0
