@@ -26,6 +26,8 @@ public:
 	virtual std::any visitPar(ifccParser::ParContext *ctx) override;
 	virtual std::any visitNot(ifccParser::NotContext *ctx) override;
 	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
+	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
+	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
 
 protected:
 	std::map<std::string, varInfo> varTable;

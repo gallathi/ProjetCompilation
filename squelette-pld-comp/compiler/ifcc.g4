@@ -31,8 +31,10 @@ expression 	: '(' expression ')'                            #par
            	| expression op=('<='|'<'|'>='|'>') expression  #comp
             | expression op=('=='|'!=') expression          #eq
            	| VAR '=' expression						    #affectation
+            | PUTCHAR '(' expression ')'                    #putchar
+            | GETCHAR '(' ')'                               #getchar
            	| CONST                                         #const
-            | CHARCONST                                   #charconst
+            | CHARCONST                                     #charconst
            	| VAR                                           #var
             ;
 
@@ -50,6 +52,8 @@ CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
 DIRECTIVE : '#' .*? '\n' -> skip ;
 WS    : [ \t\r\n] -> channel(HIDDEN);
+PUTCHAR : 'putchar';
+GETCHAR : 'getchar';
 VAR : [a-zA-Z][a-zA-Z0-9_]* ;
 PLUS : '+';
 MINUS : '-';

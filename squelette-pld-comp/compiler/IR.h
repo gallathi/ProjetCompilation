@@ -45,6 +45,8 @@ public:
 		cmp_elt,
         cmp_egt,
 		return_instr,
+		getchar,
+		putchar
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
@@ -89,6 +91,10 @@ public:
 			return "mod";
 		case IRInstr::return_instr:
 			return "return_instr";
+		case IRInstr::getchar:
+		    return "getchar";
+        case IRInstr::putchar:
+            return "putchar";
 		}
 
 		return "unknown";
