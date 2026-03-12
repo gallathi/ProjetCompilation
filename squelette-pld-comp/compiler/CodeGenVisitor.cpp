@@ -38,7 +38,6 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 	std::string varName = ctx->VAR()->getText();
 	int varIndex = varTable[varName].index;
 	string value = std::any_cast<string>(visit(ctx->expression()));
-	cfg.add_to_symbol_table(varName, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
 
 	return varName;
@@ -240,4 +239,19 @@ antlrcpp::Any CodeGenVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, to_string(charValue)});
 
 	return tempVar;
+}
+
+antlrcpp::Any CodeGenVisitor::visitPutchar(ifccParser::PutcharContext *ctx)
+{
+	string arg = std::any_cast<string>(visit(ctx->expression()));
+    cfg.current_bb->add_IRInstr(IRInstr::putchar, Type::INT, {arg});
+	return antlrcpp::Any();
+}
+
+antlrcpp::Any CodeGenVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
+{
+    string out = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(out, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::getchar, Type::INT, {out});
+	return out;
 }

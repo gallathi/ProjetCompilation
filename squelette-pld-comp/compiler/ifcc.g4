@@ -34,8 +34,10 @@ expression 	: '(' expression ')'                            #par
             | expression BITWISE_XOR expression				#bitwise_xor
             | expression BITWISE_OR expression				#bitwise_or 
            	| VAR '=' expression						    #affectation
+            | PUTCHAR '(' expression ')'                    #putchar
+            | GETCHAR '(' ')'                               #getchar
            	| CONST                                         #const
-            | CHARCONST                                   #charconst
+            | CHARCONST                                     #charconst
            	| VAR                                           #var
             ;
 
@@ -53,6 +55,8 @@ CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
 DIRECTIVE : '#' .*? '\n' -> skip ;
 WS    : [ \t\r\n] -> channel(HIDDEN);
+PUTCHAR : 'putchar';
+GETCHAR : 'getchar';
 VAR : [a-zA-Z][a-zA-Z0-9_]* ;
 PLUS : '+';
 MINUS : '-';

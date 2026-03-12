@@ -29,6 +29,8 @@ public:
 	virtual std::any visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx) override;
 	virtual std::any visitBitwise_or(ifccParser::Bitwise_orContext *ctx) override;
 	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
+	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
+	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
 
 protected:
 	std::map<std::string, varInfo> varTable;

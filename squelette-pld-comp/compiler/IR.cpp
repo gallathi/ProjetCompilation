@@ -256,5 +256,13 @@ void IRInstr::gen_asm(ostream &o)
     case return_instr: // Params : source
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;
         break;
+    case getchar: // Params : destination
+        o << "    call getchar@PLT" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case putchar: // Params : source
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %edi" << endl;
+        o << "    call putchar@PLT" << endl;
+        break;
     }
 }
