@@ -1,0 +1,10 @@
+line 5:11 token recognition error at: '"'
+line 5:21 token recognition error at: ':'
+line 5:25 token recognition error at: '\'
+line 5:27 token recognition error at: '"'
+line 5:10 extraneous input '(' expecting {'int', '{', '}', 'return', VAR}
+line 5:23 extraneous input '%' expecting {'int', '{', '}', 'return', VAR}
+line 5:31 extraneous input ')' expecting {'int', '{', '}', 'return', VAR}
+error: syntax error during parsing
+
+exit status: 1

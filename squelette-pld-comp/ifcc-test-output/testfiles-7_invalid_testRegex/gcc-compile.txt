@@ -1,0 +1,10 @@
+input.c: In function ‘main’:
+input.c:2:9: error: invalid suffix "var" on integer constant
+    2 |     int 1var;
+      |         ^~~~
+input.c:2:9: error: expected identifier or ‘(’ before numeric constant
+input.c:3:12: error: invalid suffix "var" on integer constant
+    3 |     return 1var;
+      |            ^~~~
+
+exit status: 1

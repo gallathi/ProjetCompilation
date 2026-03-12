@@ -192,14 +192,14 @@ static int unescapeChar(const std::string &s) {
             currentChar = (unsigned char)content[i];
         }
 
-\        result = (result << 8) | currentChar;
+        result = (result << 8) | currentChar;
     }
     return result;
 }
 
 antlrcpp::Any CodeGenVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
 {
-	string charLiteral = ctx->CHAR()->getText();
+	string charLiteral = ctx->CHARCONST()->getText();
 	int charValue = unescapeChar(charLiteral);
 	string tempVar = cfg.create_new_tempvar(Type::CHAR);
 	cfg.add_to_symbol_table(tempVar, Type::INT);

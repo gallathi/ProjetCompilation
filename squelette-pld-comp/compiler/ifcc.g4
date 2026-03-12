@@ -36,13 +36,12 @@ expression : '(' expression ')'                         #par
            ;
 
 CHARCONST
-    : '\'' ( ~['\\\r\n] | EscapeSequence )+ '\''
-    ;
+    : '\'' ( ~['\\\r\n] | EscapeSequence )+ '\'' ;
 
 fragment EscapeSequence
-    : '\\' [nrt'\\0]           // Standard escapes
-    | '\\x' [0-9a-fA-F]+       // Hexadecimal: \xAF
-    | '\\' [0-7]{1,3}          // Octal: \123
+    : '\\' [nrt'\\]
+    | '\\x' [0-9a-fA-F]+
+    | '\\' [0-7]+
     ;
 
 CONST : [0-9]+ ;
