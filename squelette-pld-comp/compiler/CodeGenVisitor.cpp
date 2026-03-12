@@ -80,24 +80,6 @@ antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
-
-	// char op = ctx->op->getText()[0];
-	// visit(ctx->expression(0));
-	// std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
-	// nextIndex += 4;
-	// visit(ctx->expression(1));
-	// if (op == '+')
-	//{
-	//	std::cout << "    addl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-	// }
-	// else if (op == '-')
-	//{
-	//	std::cout << "    subl %eax, -" << nextIndex - 4 << "(%rbp)" << std::endl;
-	//	std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-	// }
-	// nextIndex -= 4;
-	// return antlrcpp::Any();
-
 	char op = ctx->op->getText()[0];
 	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
 	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
@@ -116,33 +98,6 @@ antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 {
-
-	// char op = ctx->op->getText()[0];
-	// visit(ctx->expression(0));
-	// std::cout << "    movl %eax, -" << nextIndex << "(%rbp)" << std::endl;
-	// nextIndex += 4;
-	// visit(ctx->expression(1));
-	// if (op == '*')
-	//{
-	//	std::cout << "    imull -" << nextIndex - 4 << "(%rbp)" << std::endl;
-	// }
-	// else if (op == '/')
-	//{
-	//	std::cout << "    movl $0, %edx" << std::endl;
-	//	std::cout << "    movl %eax, %ecx" << std::endl;
-	//	std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-	//	std::cout << "    idiv %ecx" << std::endl;
-	// }
-	// else if (op == '%')
-	//{
-	//	std::cout << "    movl $0, %edx" << std::endl;
-	//	std::cout << "    movl %eax, %ecx" << std::endl;
-	//	std::cout << "    movl -" << nextIndex - 4 << "(%rbp), %eax" << std::endl;
-	//	std::cout << "    idiv %ecx" << std::endl;
-	//	std::cout << "    movl %edx, %eax" << std::endl;
-	// }
-	// nextIndex -= 4;
-	// return antlrcpp::Any();
 	char op = ctx->op->getText()[0];
 	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
 	string rhs = std::any_cast<string>(visit(ctx->expression(1)));

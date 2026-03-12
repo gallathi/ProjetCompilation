@@ -194,6 +194,20 @@ void IRInstr::gen_asm(ostream &o)
         o << "    setg %al" << endl;
         o << "    movzbl %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
         break;
+    case div: // Params : destination / dividende / diviseur
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    cdq" << endl;
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %ecx" << endl;
+        o << "    idiv %ecx" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case mod: // Params : destination / dividende / diviseur
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    cdq" << endl;
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %ecx" << endl;
+        o << "    idiv %ecx" << endl;
+        o << "    movl %edx, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
     case return_instr: // Params : source
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;
         break;
