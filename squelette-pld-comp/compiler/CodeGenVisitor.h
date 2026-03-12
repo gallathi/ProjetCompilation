@@ -22,6 +22,7 @@ public:
 	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx);
 	virtual std::any visitPar(ifccParser::ParContext *ctx) override;
+	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
 
 protected:
 	std::map<std::string, varInfo> varTable;

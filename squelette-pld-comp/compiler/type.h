@@ -5,7 +5,8 @@
 enum Type
 {
     INT,
-    VOID
+    VOID,
+    CHAR
 };
 
 #endif

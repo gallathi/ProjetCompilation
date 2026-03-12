@@ -31,9 +31,19 @@ expression : '(' expression ')'                         #par
            | expression op=(MUL|DIV|MOD) expression     #muldiv
            | expression op=(PLUS|MINUS) expression      #addsub
            | CONST                                      #const
-           | VAR                                        #var;
+           | VAR                                        #var
+           | CHARCONST                                   #charconst
+           ;
 
+CHARCONST
+    : '\'' ( ~['\\\r\n] | EscapeSequence )+ '\''
+    ;
 
+fragment EscapeSequence
+    : '\\' [nrt'\\0]           // Standard escapes
+    | '\\x' [0-9a-fA-F]+       // Hexadecimal: \xAF
+    | '\\' [0-7]{1,3}          // Octal: \123
+    ;
 
 CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
