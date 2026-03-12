@@ -1,7 +1,0 @@
-input.c: In function ‘main’:
-input.c:4:14: warning: character constant too long for its type
-    4 |     char c = 'abcdefghijklmnopqrstuvwxyz';
-      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-input.c:4:14: warning: overflow in conversion from ‘int’ to ‘char’ changes value from ‘2004384122’ to ‘122’ [-Woverflow]
-
-exit status: 0
