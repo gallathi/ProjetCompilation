@@ -68,6 +68,11 @@ antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 	return varName;
 }
 
+antlrcpp::Any CodeGenVisitor::visitPar(ifccParser::ParContext *ctx)
+{
+	return visit(ctx->expression());
+}
+
 antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
 
