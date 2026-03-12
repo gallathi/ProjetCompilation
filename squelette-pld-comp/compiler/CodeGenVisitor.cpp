@@ -91,6 +91,36 @@ antlrcpp::Any CodeGenVisitor::visitNot(ifccParser::NotContext *ctx)
 	return out;
 }
 
+antlrcpp::Any CodeGenVisitor::visitBitwise_and(ifccParser::Bitwise_andContext *ctx)
+{
+	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::bitwise_and, Type::INT, {out, lhs, rhs});
+	return out;
+}
+
+antlrcpp::Any CodeGenVisitor::visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx)
+{
+	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::bitwise_xor, Type::INT, {out, lhs, rhs});
+	return out;
+}
+
+antlrcpp::Any CodeGenVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
+{
+	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+	string out = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(out, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::bitwise_or, Type::INT, {out, lhs, rhs});
+	return out;
+}
+
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
 	char op = ctx->op->getText()[0];

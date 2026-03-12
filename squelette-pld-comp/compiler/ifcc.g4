@@ -28,8 +28,11 @@ expression 	: '(' expression ')'                            #par
            	| MINUS expression                              #opposite
            	| expression op=(MUL|DIV|MOD) expression        #muldiv
            	| expression op=(PLUS|MINUS) expression         #addsub
-           	| expression op=('<='|'<'|'>='|'>') expression  #comp
-            | expression op=('=='|'!=') expression          #eq
+           	| expression op=(LTE|LT|GTE|GT) expression  	#comp
+            | expression op=(EQ|NEQ) expression          	#eq
+            | expression BITWISE_AND expression				#bitwise_and
+            | expression BITWISE_XOR expression				#bitwise_xor
+            | expression BITWISE_OR expression				#bitwise_or 
            	| VAR '=' expression						    #affectation
            	| CONST                                         #const
            	| VAR                                           #var;
@@ -44,4 +47,13 @@ MINUS : '-';
 MUL : '*';
 DIV : '/';
 MOD : '%';
+EQ : '==';
+NEQ : '!=';
+GT : '>';
+GTE : '>=';
+LT : '<';
+LTE : '<=';
 NOT : '!';
+BITWISE_OR : '|';
+BITWISE_AND : '&';
+BITWISE_XOR : '^';
