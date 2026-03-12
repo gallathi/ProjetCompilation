@@ -239,3 +239,21 @@ antlrcpp::Any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
 	compteurVar += 4;
 	return 0;
 }
+
+antlrcpp::Any VariableVisitor::visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitBitwise_and(ifccParser::Bitwise_andContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
