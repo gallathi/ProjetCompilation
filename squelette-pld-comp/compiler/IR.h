@@ -31,6 +31,7 @@ public:
 		add,
 		sub,
 		neg,
+		bool_not,
 		mul,
 		div,
 		mod,
@@ -60,6 +61,8 @@ public:
 			return "sub";
 	    case IRInstr::neg:
         	return "neg";
+        case IRInstr::bool_not:
+        	return "bool_not";
 		case IRInstr::mul:
 			return "mul";
 		case IRInstr::rmem:

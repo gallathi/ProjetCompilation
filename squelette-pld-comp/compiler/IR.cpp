@@ -137,10 +137,16 @@ void IRInstr::gen_asm(ostream &o)
         o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
         break;
     case neg: // Params : destination / source
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    negl %eax" << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    negl %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case bool_not: // Params : destination / source
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    test %eax, %eax" << endl;
+        o << "    sete %al" << endl;
+        o << "    mov %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
     case mul: // Params : destination / var1 / var2
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
         o << "    imull " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;

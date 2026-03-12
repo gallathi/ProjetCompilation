@@ -11,29 +11,28 @@ block
 stmt 
     : declaration
     | declaration_var
-    | affectation 
     | return_stmt
     | affectation_declaration
     | block
-    ; 
+    | expression ';'
+    ;
 
-
-
-declaration : 'int' declaration_var ';';
+declaration : 'int' declaration_var ';' ;
 declaration_var : VAR ',' declaration_var | VAR ;
-affectation : VAR '=' expression ';' ;
 return_stmt : 'return' expression ';' ;
 affectation_declaration: 'int' VAR '=' expression ';' ;
 
 
-expression : '(' expression ')'                                                         #par
-           | MINUS expression                                                           #opposite
-           | expression op=(MUL|DIV|MOD) expression                                     #muldiv
-           | expression op=(PLUS|MINUS) expression                                      #addsub
-           | expression op=('<='|'<'|'>='|'>') expression                               #comp
-           | expression op=('=='|'!=') expression                                       #eq
-           | CONST                                                                      #const
-           | VAR                                                                        #var;
+expression 	: '(' expression ')'                            #par
+			| NOT expression							    #not
+           	| MINUS expression                              #opposite
+           	| expression op=(MUL|DIV|MOD) expression        #muldiv
+           	| expression op=(PLUS|MINUS) expression         #addsub
+           	| expression op=('<='|'<'|'>='|'>') expression  #comp
+            | expression op=('=='|'!=') expression          #eq
+           	| VAR '=' expression						    #affectation
+           	| CONST                                         #const
+           	| VAR                                           #var;
 
 CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
@@ -45,3 +44,4 @@ MINUS : '-';
 MUL : '*';
 DIV : '/';
 MOD : '%';
+NOT : '!';
