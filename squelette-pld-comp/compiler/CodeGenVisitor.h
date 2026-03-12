@@ -25,6 +25,9 @@ public:
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx);
 	virtual std::any visitPar(ifccParser::ParContext *ctx) override;
 	virtual std::any visitNot(ifccParser::NotContext *ctx) override;
+	virtual std::any visitBitwise_and(ifccParser::Bitwise_andContext *ctx) override;
+	virtual std::any visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx) override;
+	virtual std::any visitBitwise_or(ifccParser::Bitwise_orContext *ctx) override;
 	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;

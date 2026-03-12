@@ -190,12 +190,12 @@ void IRInstr::gen_asm(ostream &o)
         o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
         break;
     case cmp_neq: // Params : destination / var1 / var2
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-            o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-            o << "    setne %al" << endl;
-            o << "    movzbl %al, %eax" << endl;
-            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
-            break;
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    setne %al" << endl;
+        o << "    movzbl %al, %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
     case cmp_lt: // Params : destination / var1 / var2 (on renvoie si var1 < var2)
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
         o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
@@ -237,6 +237,21 @@ void IRInstr::gen_asm(ostream &o)
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %ecx" << endl;
         o << "    idiv %ecx" << endl;
         o << "    movl %edx, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case bitwise_and: // Params : destination / var1 / var2
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    and " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case bitwise_xor: // Params : destination / var1 / var2
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    xor " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        break;
+    case bitwise_or: // Params : destination / var1 / var2
+        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        o << "    or " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
         break;
     case return_instr: // Params : source
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;

@@ -40,7 +40,7 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [ ] Constantes  caractère (avec simple quote).
 * [x] Opérations arithmétiques de base (`+`, `-`, `*`).
 * [x] Division et modulo.
-* [ ] Opérations logiques bit-à-bit (`|`, `&`, `^`).
+* [X] Opérations logiques bit-à-bit (`|`, `&`, `^`).
 * [ ] Opérations de comparaison (`==`, `!=`, `<`, `>`).
 * [X] Opérations unaires (`!`, `-`).
 * [x] Affectation (qui retourne aussi une valeur).

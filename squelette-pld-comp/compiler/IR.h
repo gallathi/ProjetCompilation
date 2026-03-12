@@ -35,6 +35,9 @@ public:
 		mul,
 		div,
 		mod,
+		bitwise_and,
+		bitwise_xor,
+		bitwise_or,
 		rmem,
 		wmem,
 		call,
@@ -89,6 +92,12 @@ public:
 			return "div";
 		case IRInstr::mod:
 			return "mod";
+		case IRInstr::bitwise_and:
+			return "bitwise_and";
+		case IRInstr::bitwise_xor:
+			return "bitwise_xor";
+		case IRInstr::bitwise_or:
+			return "bitwise_or";
 		case IRInstr::return_instr:
 			return "return_instr";
 		case IRInstr::getchar:
