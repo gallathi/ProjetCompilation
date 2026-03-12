@@ -11,17 +11,14 @@ block
 stmt 
     : declaration
     | declaration_var
-    | affectation 
     | return_stmt
     | affectation_declaration
     | block
+    | expression ';'
     ; 
 
-
-
-declaration : 'int' declaration_var ';';
+declaration : 'int' declaration_var ';' ;
 declaration_var : VAR ',' declaration_var | VAR ;
-affectation : VAR '=' expression ';' ;
 return_stmt : 'return' expression ';' ;
 affectation_declaration: 'int' VAR '=' expression ';' ;
 
@@ -31,6 +28,7 @@ expression 	: '(' expression ')'                        #par
            	| MINUS expression                          #opposite
            	| expression op=(MUL|DIV|MOD) expression    #muldiv
            	| expression op=(PLUS|MINUS) expression     #addsub
+           	| VAR '=' expression						#affectation
            	| CONST                                     #const
            	| VAR                                       #var;
 

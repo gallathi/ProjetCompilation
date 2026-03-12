@@ -43,7 +43,7 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 	cfg.add_to_symbol_table(varName, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
 
-	return antlrcpp::Any();
+	return varName;
 }
 
 antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
