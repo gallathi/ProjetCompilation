@@ -1,1 +1,4 @@
 ifcc-test-output/
+*.s
+__pycache__
+ifcc-test-output/
