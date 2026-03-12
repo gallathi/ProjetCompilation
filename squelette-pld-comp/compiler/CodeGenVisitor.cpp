@@ -17,8 +17,6 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 	visit(ctx->block());
 	cfg.gen_asm(cout);
 	cfg.gen_asm_epilogue(cout);
-
-	visit(ctx->block());
 	return antlrcpp::Any();
 }
 
