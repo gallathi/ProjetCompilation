@@ -42,7 +42,7 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [x] Division et modulo.
 * [ ] Opérations logiques bit-à-bit (`|`, `&`, `^`).
 * [ ] Opérations de comparaison (`==`, `!=`, `<`, `>`).
-* [ ] Opérations unaires (`!`, `~`).
+* [X] Opérations unaires (`!`, `-`).
 * [x] Affectation (qui retourne aussi une valeur).
 * [ ] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
 * [ ] Définition de fonctions avec paramètres, et type de retour `int` ou `void`.
