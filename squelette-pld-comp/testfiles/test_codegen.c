@@ -7,8 +7,20 @@ int main()
 
     if (a)
     {
-        int b;
-        b = 1;
+        int g;
+        g = 1;
+    }
+    int z;
+    z = 1;
+    if (b)
+    {
+        int h;
+        h = 1;
+    }
+    else
+    {
+        int i;
+        i = 1;
     }
 
     a = 2;

@@ -19,8 +19,12 @@ stmt
     ; 
 
 conditional
-    : 'if' '(' VAR ')' block
-    | 'if' '(' VAR ')' block 'else' (block | conditional)
+    : 'if' '(' VAR ')' block else_stmt*
+    ;
+
+else_stmt
+    : 'else' 'if' '(' VAR ')' block    #else_if
+    | 'else' block                     #else
     ;
 
 

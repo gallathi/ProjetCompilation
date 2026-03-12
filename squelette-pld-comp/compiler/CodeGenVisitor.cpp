@@ -1,6 +1,7 @@
 #include "CodeGenVisitor.h"
 #include "IR.h"
 #include "type.h"
+#include <stack>
 
 using namespace std;
 
@@ -20,10 +21,10 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 		cfg.add_to_symbol_table(name, Type::INT);
 	}
 
-	cfg.gen_asm_prologue(cout);
+	// cfg.gen_asm_prologue(cout);
 	visit(ctx->block());
-	cfg.gen_asm(cout);
-	cfg.gen_asm_epilogue(cout);
+	// cfg.gen_asm(cout);
+	// cfg.gen_asm_epilogue(cout);
 
 	if (debug_cfg)
 		cout << cfg;
@@ -43,63 +44,80 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 	return antlrcpp::Any();
 }
 
-antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *ctx)
+BasicBlock *endifBB;
+
+antlrcpp::Any CodeGenVisitor::visitElse_if(ifccParser::Else_ifContext *ctx)
+{
+	BasicBlock *elseBB = new BasicBlock(&cfg, cfg.new_BB_name());
+
+	elseBB->test_var_name = cond;
+	cond[0]++;
+
+	cfg.add_bb(elseBB);
+	elseBB->exit_true = endifBB;
+
+	cfg.current_bb->exit_false = elseBB;
+
+	cfg.current_bb = elseBB;
+	visit(ctx->block());
+	cfg.current_bb = elseBB;
+
+	cout << "else_if";
+
+	return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitElse(ifccParser::ifccParser::ElseContext *ctx)
 {
 
+	BasicBlock *elseBB = new BasicBlock(&cfg, cfg.new_BB_name());
+
+	elseBB->test_var_name = cond;
+	cond[0]++;
+
+	cfg.add_bb(elseBB);
+	elseBB->exit_true = endifBB;
+
+	cfg.current_bb->exit_false = elseBB;
+
+	cfg.current_bb = elseBB;
+	visit(ctx->block());
+	cfg.current_bb = elseBB;
+
+	cout << "else_if";
+
+	return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *ctx)
+{
+	bool entry = 0;
+
+	endifBB = new BasicBlock(&cfg, cfg.new_BB_name());
 	cfg.current_bb->test_var_name = cond;
 	cond[0]++;
+
 	BasicBlock *thenBB = new BasicBlock(&cfg, cfg.new_BB_name());
-	BasicBlock *elseBB = nullptr;
-
-	bool elseConditional = false;
-	bool elseBlock = false;
-
-	/// checking if there is an else, and if its a block or another conditional
-	if (ctx->block().size() == 2)
-	{
-		elseBB = new BasicBlock(&cfg, cfg.new_BB_name());
-		elseBlock = true;
-	}
-	if (ctx->conditional() != nullptr)
-	{
-		elseBB = new BasicBlock(&cfg, cfg.new_BB_name());
-		elseConditional = true;
-	}
-	BasicBlock *endifBB = new BasicBlock(&cfg, cfg.new_BB_name());
-
-	// ading the thern bb and endif to it
-	cfg.add_bb(thenBB);
-	thenBB->exit_true = endifBB;
-
-	// checking if there is an else block or conditional, and adding the proper exits to the current CFG
-	if (elseBB != nullptr)
-	{
-		cfg.add_bb(elseBB);
-		elseBB->exit_true = endifBB;
-		cfg.current_bb->exit_false = elseBB;
-	}
-	else
-	{
-		cfg.current_bb->exit_false = endifBB;
-	}
-	cfg.add_bb(endifBB);
 	cfg.current_bb->exit_true = thenBB;
+	cfg.current_bb->exit_false = endifBB;
 
-	cfg.current_bb = thenBB;
-	visit(ctx->block(0));
+	thenBB->exit_true = endifBB; // unconditional jump to endif at the end of the then block
+	cfg.add_bb(thenBB);
 
-	if (elseBB != nullptr)
+	// cfg.current_bb = endifBB; // default end of graph, will change if there is another conditionals
+
+	for (auto s : ctx->else_stmt())
 	{
-		cfg.current_bb = elseBB;
-		if (elseConditional)
-			visit(ctx->conditional());
-		else if (elseBlock)
-		{
-			visit(ctx->block(1));
-		}
+		visit(s);
 	}
 
+	cfg.current_bb = thenBB; // if true block
+	visit(ctx->block());
+
+	cfg.current_bb->exit_true = endifBB; // jump inconditionelle
 	cfg.current_bb = endifBB;
+
+	cfg.add_bb(endifBB);
 
 	return 0;
 }

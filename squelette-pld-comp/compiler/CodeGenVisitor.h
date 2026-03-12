@@ -3,6 +3,7 @@
 #include "antlr4-runtime.h"
 #include "generated/ifccBaseVisitor.h"
 #include "VariableVisitor.h"
+#include "IR.h"
 
 #include <map>
 #include <string>
@@ -22,6 +23,8 @@ public:
 	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx);
 	virtual std::any visitConditional(ifccParser::ConditionalContext *ctx);
+	virtual std::any visitElse(ifccParser::ElseContext *ctx);
+	virtual std::any visitElse_if(ifccParser::Else_ifContext *ctx);
 
 protected:
 	std::map<std::string, varInfo> varTable;
