@@ -37,14 +37,14 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [x] Type de données de base `int` (un type 32 bits).
 * [x] Déclaration de variables n'importe où.
 * [x] Constantes entières .
-* [ ] Constantes  caractère (avec simple quote).
+* [x] Constantes  caractère (avec simple quote).
 * [x] Opérations arithmétiques de base (`+`, `-`, `*`).
 * [x] Division et modulo.
 * [ ] Opérations logiques bit-à-bit (`|`, `&`, `^`).
-* [ ] Opérations de comparaison (`==`, `!=`, `<`, `>`).
+* [x] Opérations de comparaison (`==`, `!=`, `<`, `>`).
 * [X] Opérations unaires (`!`, `-`).
 * [x] Affectation (qui retourne aussi une valeur).
-* [ ] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
+* [x] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
 * [ ] Définition de fonctions avec paramètres, et type de retour `int` ou `void`.
 * [ ] Vérification de la cohérence des appels de fonctions et leurs paramètres.
 * [x] Structure de blocs grâce à `{` et `}`.

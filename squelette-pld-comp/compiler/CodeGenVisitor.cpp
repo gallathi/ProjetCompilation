@@ -5,6 +5,7 @@
 using namespace std;
 
 CFG cfg;
+bool returned = false;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
@@ -28,6 +29,9 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 	for (auto s : ctx->stmt())
 	{
 		visit(s);
+		if (returned){
+			break;
+		}
 	}
 
 	return antlrcpp::Any();
@@ -48,6 +52,7 @@ antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *c
 {
 	string value = std::any_cast<string>(visit(ctx->expression()));
 	cfg.current_bb->add_IRInstr(IRInstr::return_instr, Type::INT, {value});
+	returned = true;
 	return antlrcpp::Any();
 }
 

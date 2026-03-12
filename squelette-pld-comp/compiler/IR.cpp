@@ -6,7 +6,7 @@ void CFG::gen_asm_prologue(ostream &o, int compteurVar)
 {
 #ifdef __APPLE__
     o << ".globl _main\n";
-    o << " _main: \n";
+    o << " _main \n";
 #else
     o << ".globl main\n";
     o << " main: \n";
@@ -19,6 +19,7 @@ void CFG::gen_asm_prologue(ostream &o, int compteurVar)
 
 void CFG::gen_asm_epilogue(ostream &o)
 {
+    o << "return_exit_label:" << endl;
 	o << "    movq %rbp, %rsp\n";
     o << "    popq %rbp\n";
     o << "    ret\n";
@@ -240,6 +241,7 @@ void IRInstr::gen_asm(ostream &o)
         break;
     case return_instr: // Params : source
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;
+        o << "    jmp " << "return_exit_label" << endl;
         break;
     }
 }
