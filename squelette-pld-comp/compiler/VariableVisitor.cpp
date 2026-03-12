@@ -215,3 +215,27 @@ antlrcpp::Any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 	compteurVar += 4;
 	return 0;
 }
+
+antlrcpp::Any VariableVisitor::visitEq(ifccParser::EqContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitComp(ifccParser::CompContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitNot(ifccParser::NotContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
