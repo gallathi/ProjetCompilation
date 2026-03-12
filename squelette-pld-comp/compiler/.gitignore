@@ -6,3 +6,5 @@ generated/
 !example-config.mk
 ifcc
 ../ifcc-test-output/
+../testfiles/a.out
+../testfiles/out.s
