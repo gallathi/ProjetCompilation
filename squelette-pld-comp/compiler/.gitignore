@@ -8,3 +8,5 @@ ifcc
 ../ifcc-test-output/
 ../testfiles/a.out
 ../testfiles/out.s
+a.out
+out.s
