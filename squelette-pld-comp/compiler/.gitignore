@@ -10,3 +10,4 @@ ifcc
 ../testfiles/out.s
 a.out
 out.s
+../__pycache__
