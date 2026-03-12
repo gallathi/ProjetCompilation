@@ -3,5 +3,14 @@
 int main()
 {
     int a;
-    a = 12;
+    a = 1;
+
+    if (a)
+    {
+        int b;
+        b = 1;
+    }
+
+    a = 2;
+    return a;
 }

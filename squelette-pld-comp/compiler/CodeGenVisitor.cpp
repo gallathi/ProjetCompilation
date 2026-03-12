@@ -5,9 +5,16 @@
 using namespace std;
 
 CFG cfg;
+bool debug_cfg = true;
+
+string cond = "a";
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
+	BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
+	cfg.add_bb(bb);
+	cfg.current_bb = bb;
+
 	for (const auto &[name, info] : varTable)
 	{
 		cfg.add_to_symbol_table(name, Type::INT);
@@ -18,21 +25,83 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 	cfg.gen_asm(cout);
 	cfg.gen_asm_epilogue(cout);
 
+	if (debug_cfg)
+		cout << cfg;
+
 	visit(ctx->block());
 	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
-	BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
-	cfg.add_bb(bb);
-	cfg.current_bb = bb;
+
 	for (auto s : ctx->stmt())
 	{
 		visit(s);
 	}
 
 	return antlrcpp::Any();
+}
+
+antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *ctx)
+{
+
+	cfg.current_bb->test_var_name = cond;
+	cond[0]++;
+	BasicBlock *thenBB = new BasicBlock(&cfg, cfg.new_BB_name());
+	BasicBlock *elseBB = nullptr;
+
+	bool elseConditional = false;
+	bool elseBlock = false;
+
+	/// checking if there is an else, and if its a block or another conditional
+	if (ctx->block().size() == 2)
+	{
+		elseBB = new BasicBlock(&cfg, cfg.new_BB_name());
+		elseBlock = true;
+	}
+	if (ctx->conditional() != nullptr)
+	{
+		elseBB = new BasicBlock(&cfg, cfg.new_BB_name());
+		elseConditional = true;
+	}
+	BasicBlock *endifBB = new BasicBlock(&cfg, cfg.new_BB_name());
+
+	// ading the thern bb and endif to it
+	cfg.add_bb(thenBB);
+	thenBB->exit_true = endifBB;
+
+	// checking if there is an else block or conditional, and adding the proper exits to the current CFG
+	if (elseBB != nullptr)
+	{
+		cfg.add_bb(elseBB);
+		elseBB->exit_true = endifBB;
+		cfg.current_bb->exit_false = elseBB;
+	}
+	else
+	{
+		cfg.current_bb->exit_false = endifBB;
+	}
+	cfg.add_bb(endifBB);
+	cfg.current_bb->exit_true = thenBB;
+
+	cfg.current_bb = thenBB;
+	visit(ctx->block(0));
+
+	if (elseBB != nullptr)
+	{
+		cfg.current_bb = elseBB;
+		if (elseConditional)
+			visit(ctx->conditional());
+		else if (elseBlock)
+		{
+			visit(ctx->block(1));
+		}
+	}
+
+	cfg.current_bb = endifBB;
+
+	return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx)

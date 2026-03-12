@@ -21,6 +21,7 @@ public:
 	virtual std::any visitMuldiv(ifccParser::MuldivContext *ctx) override;
 	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx);
+	virtual std::any visitConditional(ifccParser::ConditionalContext *ctx);
 
 protected:
 	std::map<std::string, varInfo> varTable;

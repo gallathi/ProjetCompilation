@@ -15,8 +15,13 @@ stmt
     | return_stmt
     | affectation_declaration
     | block
+    | conditional
     ; 
 
+conditional
+    : 'if' '(' VAR ')' block
+    | 'if' '(' VAR ')' block 'else' (block | conditional)
+    ;
 
 
 declaration : 'int' declaration_var ';';
