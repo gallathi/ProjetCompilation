@@ -276,7 +276,7 @@ for jobname in jobs:
         # test-case is a valid program. we should run it
         gccstatus=run_command("gcc -o exe-gcc asm-gcc.s", "gcc-link.txt")
     if gccstatus == 0: # then both compile and link stage went well
-        exegccstatus=run_command("./exe-gcc", "gcc-execute.txt")
+        exegccstatus=run_command("echo aaaaa | ./exe-gcc", "gcc-execute.txt")
         if args.verbose >=2:
             dumpfile("gcc-execute.txt")
             
@@ -314,7 +314,7 @@ for jobname in jobs:
     ## both compilers  did produce an  executable, so now we  run both
     ## these executables and compare the results.
         
-    run_command("./exe-ifcc", "ifcc-execute.txt")
+    run_command("echo aaaaa | ./exe-ifcc", "ifcc-execute.txt")
     if open("gcc-execute.txt").read() != open("ifcc-execute.txt").read() :
         print("TEST FAIL (different results at execution)")
         all_ok=False
