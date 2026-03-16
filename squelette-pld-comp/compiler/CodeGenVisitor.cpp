@@ -312,3 +312,14 @@ cfg.add_to_symbol_table(out, Type::INT);
 cfg.current_bb->add_IRInstr(IRInstr::getchar, Type::INT, {out});
 return out;
 }
+e::INT, {arg});
+	return antlrcpp::Any();
+}
+
+antlrcpp::Any CodeGenVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
+{
+    string out = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(out, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::getchar, Type::INT, {out});
+	return out;
+}
