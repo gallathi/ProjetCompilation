@@ -6,7 +6,7 @@
 # In "single-file mode", we mimic the CLI behaviour of GCC i.e. we
 # interpret the '-o', '-S', and '-c' options.
 #
-# Run "python3 ifcc-test.py --help" for more info.
+# Run "python3 ifcc-test-macos.py --help" for more info.
 
 import argparse
 import glob
@@ -14,13 +14,14 @@ import os
 import shutil
 import sys
 import subprocess
+import platform
 
 def run_command(string, logfile=None, toscreen=False):
     """ execute `string` as a shell command. Maybe write stdout+stderr to `logfile` and/or to the toscreen.
         return the exit status""" 
 
     if args.debug:
-        print("ifcc-test.py: "+string)
+        print("ifcc-test-macos.py: "+string)
     
     process=subprocess.Popen(string,shell=True,
                              stderr=subprocess.STDOUT,stdout=subprocess.PIPE,
@@ -63,11 +64,11 @@ description = "Testing script for the ifcc compiler. operates in one of two mode
     +twf("- Multiple-files mode (by default): Compile several programs with both GCC and IFCC, run them, and compare the results.",)+"\n\n"
     +twf("- Single-file mode (with options -o,-c and/or -S): Compile and/or assemble and/or link a single program."),
 epilog="examples:\n\n"
-    +twf("python3 ifcc-test.py testfiles")+'\n'
-    +twf("python3 ifcc-test.py path/to/some/dir/*.c path/to/some/other/dir")+'\n'
+    +twf("python3 ifcc-test-macos.py testfiles")+'\n'
+    +twf("python3 ifcc-test-macos.py path/to/some/dir/*.c path/to/some/other/dir")+'\n'
     +'\n'
-    +twf("python3 ifcc-test.py -o ./myprog path/to/some/source.c")+'\n'
-    +twf("python3 ifcc-test.py -S -o truc.s truc.c")+'\n'
+    +twf("python3 ifcc-test-macos.py -o ./myprog path/to/some/source.c")+'\n'
+    +twf("python3 ifcc-test-macos.py -S -o truc.s truc.c")+'\n'
     ,
 )
 
@@ -90,12 +91,20 @@ if args.debug >=2:
 
 orig_cwd=os.getcwd()
 if "ifcc-test-output" in orig_cwd:
-    print('error: cannot run ifcc-test.py from within its own output directory')
+    print('error: cannot run ifcc-test-macos.py from within its own output directory')
     exit(1)
 
 pld_base_dir=os.path.normpath(os.path.dirname(__file__))
 if args.debug:
-    print("ifcc-test.py: "+os.path.dirname(__file__))
+    print("ifcc-test-macos.py: "+os.path.dirname(__file__))
+
+# Always assemble/link test artifacts as x86_64 on macOS because ifcc emits x86_64 assembly.
+is_macos = (sys.platform == "darwin")
+host_arch = platform.machine().lower()
+cc_command = "clang -arch x86_64" if is_macos else "gcc"
+
+# On Apple Silicon, run generated x86_64 executables via Rosetta when available.
+run_prefix = "arch -x86_64 " if is_macos and host_arch in ("arm64", "aarch64") else ""
 
 # cleanup stale output directory
 if os.path.isdir(f'{pld_base_dir}/ifcc-test-output'):
@@ -154,7 +163,7 @@ if args.S or args.c or args.output:
         ifccstatus=run_command(f'{pld_base_dir}/compiler/ifcc {inputfilename} > {asmname}')
         if ifccstatus: # let's show error messages on screen
             exit(run_command(f'{pld_base_dir}/compiler/ifcc {inputfilename}',toscreen=True))
-        exit(run_command(f'gcc -c -o {args.output} {asmname}',toscreen=True))
+        exit(run_command(f'{cc_command} -c -o {args.output} {asmname}',toscreen=True))
         
     else: # produce an executable
         if args.output[-2:] in [".o",".c",".s"]:
@@ -164,7 +173,7 @@ if args.S or args.c or args.output:
         ifccstatus=run_command(f'{pld_base_dir}/compiler/ifcc {inputfilename} > {asmname}')
         if ifccstatus:
             exit(run_command(f'{pld_base_dir}/compiler/ifcc {inputfilename}', toscreen=True))
-        exit(run_command(f'gcc -o {args.output} {asmname}'))
+        exit(run_command(f'{cc_command} -o {args.output} {asmname}'))
 
     # we should never end up here
     print("unexpected error. please report this bug.")
@@ -271,12 +280,12 @@ for jobname in jobs:
     os.chdir(jobname)
     
     ## Reference compiler = GCC
-    gccstatus=run_command("gcc -S -o asm-gcc.s input.c", "gcc-compile.txt")
+    gccstatus=run_command(f"{cc_command} -S -o asm-gcc.s input.c", "gcc-compile.txt")
     if gccstatus == 0:
         # test-case is a valid program. we should run it
-        gccstatus=run_command("gcc -o exe-gcc asm-gcc.s", "gcc-link.txt")
+        gccstatus=run_command(f"{cc_command} -o exe-gcc asm-gcc.s", "gcc-link.txt")
     if gccstatus == 0: # then both compile and link stage went well
-        exegccstatus=run_command("echo aaaaa | ./exe-gcc", "gcc-execute.txt")
+        exegccstatus=run_command(f"{run_prefix}./exe-gcc", "gcc-execute.txt")
         if args.verbose >=2:
             dumpfile("gcc-execute.txt")
             
@@ -302,7 +311,7 @@ for jobname in jobs:
         continue
     else:
         ## ifcc accepts to compile valid program -> let's link it
-        ldstatus=run_command("gcc -o exe-ifcc asm-ifcc.s", "ifcc-link.txt")
+        ldstatus=run_command(f"{cc_command} -o exe-ifcc asm-ifcc.s", "ifcc-link.txt")
         if ldstatus:
             print("TEST FAIL (your compiler produces incorrect assembly)")
             all_ok=False
@@ -314,7 +323,7 @@ for jobname in jobs:
     ## both compilers  did produce an  executable, so now we  run both
     ## these executables and compare the results.
         
-    run_command("echo aaaaa | ./exe-ifcc", "ifcc-execute.txt")
+    run_command(f"{run_prefix}./exe-ifcc", "ifcc-execute.txt")
     if open("gcc-execute.txt").read() != open("ifcc-execute.txt").read() :
         print("TEST FAIL (different results at execution)")
         all_ok=False
@@ -330,4 +339,4 @@ for jobname in jobs:
     print("TEST OK")
 
 if not (all_ok or args.verbose):
-    print("Some test-cases failed. Run ifcc-test.py with option '--verbose' for more detailed feedback.")
+    print("Some test-cases failed. Run ifcc-test-macos.py with option '--verbose' for more detailed feedback.")

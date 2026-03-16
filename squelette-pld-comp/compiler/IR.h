@@ -31,16 +31,25 @@ public:
 		add,
 		sub,
 		neg,
+		bool_not,
 		mul,
 		div,
 		mod,
+		bitwise_and,
+		bitwise_xor,
+		bitwise_or,
 		rmem,
 		wmem,
 		call,
 		cmp_eq,
+		cmp_neq,
 		cmp_lt,
-		cmp_le,
+		cmp_gt,
+		cmp_elt,
+		cmp_egt,
 		return_instr,
+		getchar,
+		putchar
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
@@ -57,6 +66,8 @@ public:
 			return "sub";
 		case IRInstr::neg:
 			return "neg";
+		case IRInstr::bool_not:
+			return "bool_not";
 		case IRInstr::mul:
 			return "mul";
 		case IRInstr::rmem:
@@ -67,16 +78,32 @@ public:
 			return "call";
 		case IRInstr::cmp_eq:
 			return "cmp_eq";
+		case IRInstr::cmp_neq:
+			return "cmp_neq";
 		case IRInstr::cmp_lt:
 			return "cmp_lt";
-		case IRInstr::cmp_le:
-			return "cmp_le";
+		case IRInstr::cmp_gt:
+			return "cmp_gt";
+		case IRInstr::cmp_elt:
+			return "cmp_elt";
+		case IRInstr::cmp_egt:
+			return "cmp_egt";
 		case IRInstr::div:
 			return "div";
 		case IRInstr::mod:
 			return "mod";
+		case IRInstr::bitwise_and:
+			return "bitwise_and";
+		case IRInstr::bitwise_xor:
+			return "bitwise_xor";
+		case IRInstr::bitwise_or:
+			return "bitwise_or";
 		case IRInstr::return_instr:
 			return "return_instr";
+		case IRInstr::getchar:
+			return "getchar";
+		case IRInstr::putchar:
+			return "putchar";
 		}
 
 		return "unknown";
@@ -186,7 +213,7 @@ public:
 	// x86 code generation: could be encapsulated in a processor class in a retargetable compiler
 	void gen_asm(ostream &o);
 	string IR_reg_to_asm(string reg); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
-	void gen_asm_prologue(ostream &o);
+	void gen_asm_prologue(ostream &o, int compteurVar);
 	void gen_asm_epilogue(ostream &o);
 
 	// symbol table methods
