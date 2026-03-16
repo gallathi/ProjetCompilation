@@ -5,19 +5,26 @@
 #include <utility>
 #include <string>
 
-std::stack<std::pair<std::string, int>> s;
+struct scopedVarInfo
+{
+	std::string name;
+	std::string symbol;
+	int block;
+};
+
+std::stack<scopedVarInfo> s;
 
 int currentBlock;
 
 bool checkIfVarInStack(std::string var)
 {
-	std::stack<std::pair<std::string, int>> tempStack = s;
+	std::stack<scopedVarInfo> tempStack = s;
 
 	while (!tempStack.empty())
 	{
 		auto top = tempStack.top();
 
-		if (top.first == var)
+		if (top.name == var)
 		{
 			return true;
 		}
@@ -26,6 +33,46 @@ bool checkIfVarInStack(std::string var)
 	}
 
 	return false;
+}
+
+bool checkIfVarInCurrentBlock(std::string var)
+{
+	std::stack<scopedVarInfo> tempStack = s;
+
+	while (!tempStack.empty())
+	{
+		auto top = tempStack.top();
+		if (top.block < currentBlock)
+		{
+			break;
+		}
+
+		if (top.block == currentBlock && top.name == var)
+		{
+			return true;
+		}
+
+		tempStack.pop();
+	}
+
+	return false;
+}
+
+std::string resolveVisibleVarSymbol(const std::string &var)
+{
+	std::stack<scopedVarInfo> tempStack = s;
+
+	while (!tempStack.empty())
+	{
+		auto top = tempStack.top();
+		if (top.name == var)
+		{
+			return top.symbol;
+		}
+		tempStack.pop();
+	}
+
+	return "";
 }
 
 int VariableVisitor::getErrorCount()
@@ -49,8 +96,22 @@ std::map<std::string, varInfo> VariableVisitor::getVarTable()
 
 antlrcpp::Any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
+	currentBlock = 0;
+	hasReturn = false;
+	declarationCounter = 0;
+	while (!s.empty())
+	{
+		s.pop();
+	}
 
 	visit(ctx->block());
+
+	if (!hasReturn)
+	{
+		if (debug)
+			std::cout << "ERREUR : Le programme doit contenir au moins un return." << std::endl;
+		errorCount++;
+	}
 
 	// vérifie variables non utilisées
 	bool allUsed = true;
@@ -80,7 +141,7 @@ antlrcpp::Any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 		visit(s);
 	}
 	// je veux iterer sur la stack pour enlever les variable du precedant block
-	while (!s.empty() && s.top().second == currentBlock)
+	while (!s.empty() && s.top().block == currentBlock)
 	{
 		s.pop();
 	}
@@ -90,25 +151,29 @@ antlrcpp::Any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 antlrcpp::Any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
 	std::string var = ctx->VAR()->getText();
-	if (varTable.find(var) != varTable.end())
+	if (checkIfVarInCurrentBlock(var))
 	{
 		if (debug)
 			std::cout << "ERREUR : La variable " << var << " est déclarée plusieurs fois." << std::endl;
 		errorCount++;
 		return 0;
 	}
+
+	declarationCounter++;
+	std::string symbolName = var + "#" + std::to_string(declarationCounter);
+
 	varInfo info;
 	info.index = nextIndex;
 	nextIndex += 4;
 	compteurVar += 4;
 	info.used = false;
 	info.affected = false;
-	varTable[var] = info;
+	varTable[symbolName] = info;
 
-	s.push(std::make_pair(var, currentBlock));
+	s.push({var, symbolName, currentBlock});
 
 	if (debug)
-		std::cout << "déclaration de " << var << " : " << info.index << std::endl;
+		std::cout << "déclaration de " << var << " (" << symbolName << ") : " << info.index << std::endl;
 	if (ctx->declaration_var() != nullptr)
 		visit(ctx->declaration_var());
 	return 0;
@@ -118,7 +183,9 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 {
 	visit(ctx->expression());
 	std::string var = ctx->VAR()->getText();
-	if (varTable.find(var) == varTable.end())
+	std::string symbolName = resolveVisibleVarSymbol(var);
+
+	if (symbolName.empty())
 	{
 		if (debug)
 			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
@@ -126,35 +193,26 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 		return 0;
 	}
 
-	bool declaredInEnclosingBlock = checkIfVarInStack(var);
-
-	if (!declaredInEnclosingBlock)
-	{
-		if (debug)
-			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
-		errorCount++;
-		return 0;
-	}
-
-	varTable[var].used = true;
-	varTable[var].affected = true;
+	varTable[symbolName].used = true;
+	varTable[symbolName].affected = true;
 
 	if (debug)
-		std::cout << "affectation de la variable " << var << std::endl;
+		std::cout << "affectation de la variable " << var << " (" << symbolName << ")" << std::endl;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
 {
 	std::string var = ctx->VAR()->getText();
-	if (varTable.find(var) == varTable.end())
+	std::string symbolName = resolveVisibleVarSymbol(var);
+	if (symbolName.empty())
 	{
 		if (debug)
 			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
 		errorCount++;
 		return 0;
 	}
-	else if (!varTable[var].affected)
+	if (!varTable[symbolName].affected)
 	{
 		if (debug)
 			std::cout << "ERREUR : La variable " << var << " est utilisée avant afféctation." << std::endl;
@@ -162,19 +220,9 @@ antlrcpp::Any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
 		return 0;
 	}
 
-	bool declaredInEnclosingBlock = checkIfVarInStack(var);
-
-	if (!declaredInEnclosingBlock)
-	{
-		if (debug)
-			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
-		errorCount++;
-		return 0;
-	}
-
-	varTable[var].used = true;
+	varTable[symbolName].used = true;
 	if (debug)
-		std::cout << "utilisation de la variable " << var << std::endl;
+		std::cout << "utilisation de la variable " << var << " (" << symbolName << ")" << std::endl;
 	return 0;
 }
 
@@ -182,7 +230,7 @@ antlrcpp::Any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *
 {
 
 	visit(ctx->expression());
-	bool allUsed = true;
+	hasReturn = true;
 
 	return 0;
 }
@@ -211,6 +259,48 @@ antlrcpp::Any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 }
 
 antlrcpp::Any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitEq(ifccParser::EqContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitComp(ifccParser::CompContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitNot(ifccParser::NotContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitBitwise_and(ifccParser::Bitwise_andContext *ctx)
 {
 	compteurVar += 4;
 	return 0;
