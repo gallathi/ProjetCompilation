@@ -19,16 +19,15 @@ stmt
     ;
 
 conditional
-    : 'if' '(' VAR ')' block else_stmt*
+    : 'if' '(' expression ')' block else_stmt*
     ;
 
 else_stmt
-    : 'else' 'if' '(' VAR ')' block    #else_if
+    : 'else' 'if' '(' expression ')' block    #else_if
     | 'else' block                     #else
     ;
 
 
-declaration : 'int' declaration_var ';';
 declaration : 'int' declaration_var ';' ;
 declaration_var : VAR ',' declaration_var | VAR ;
 return_stmt : 'return' expression ';' ;

@@ -29,13 +29,13 @@ public:
 	virtual std::any visitAddsub(ifccParser::AddsubContext *ctx) override;
 	virtual std::any visitMuldiv(ifccParser::MuldivContext *ctx) override;
 	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
-    virtual std::any visitComp(ifccParser::CompContext *ctx) override;
-    virtual std::any visitEq(ifccParser::EqContext *ctx) override;
-    virtual std::any visitNot(ifccParser::NotContext *ctx) override;
-    virtual std::any visitBitwise_and(ifccParser::Bitwise_andContext *ctx) override;
-    virtual std::any visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx) override;
-    virtual std::any visitBitwise_or(ifccParser::Bitwise_orContext *ctx) override;
-    virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
+	virtual std::any visitComp(ifccParser::CompContext *ctx) override;
+	virtual std::any visitEq(ifccParser::EqContext *ctx) override;
+	virtual std::any visitNot(ifccParser::NotContext *ctx) override;
+	virtual std::any visitBitwise_and(ifccParser::Bitwise_andContext *ctx) override;
+	virtual std::any visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx) override;
+	virtual std::any visitBitwise_or(ifccParser::Bitwise_orContext *ctx) override;
+	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();

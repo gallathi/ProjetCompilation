@@ -85,7 +85,8 @@ int VariableVisitor::getNextOffset()
 	return nextIndex;
 }
 
-int VariableVisitor::getCompteurVar() {
+int VariableVisitor::getCompteurVar()
+{
 	return compteurVar;
 }
 
@@ -248,36 +249,47 @@ antlrcpp::Any VariableVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
 
 antlrcpp::Any VariableVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
+
 	compteurVar += 4;
+	visit(ctx->expression());
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
 	compteurVar += 4;
+	visit(ctx->expression(0));
+	visit(ctx->expression(1));
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 {
 	compteurVar += 4;
+	visit(ctx->expression(0));
+	visit(ctx->expression(1));
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitEq(ifccParser::EqContext *ctx)
 {
+	visit(ctx->expression(0));
+	visit(ctx->expression(1));
 	compteurVar += 4;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitComp(ifccParser::CompContext *ctx)
 {
+	visit(ctx->expression(0));
+	visit(ctx->expression(1));
 	compteurVar += 4;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitNot(ifccParser::NotContext *ctx)
 {
+	visit(ctx->expression());
 	compteurVar += 4;
 	return 0;
 }
@@ -290,18 +302,24 @@ antlrcpp::Any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
 
 antlrcpp::Any VariableVisitor::visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx)
 {
+	visit(ctx->expression(0));
+	visit(ctx->expression(1));
 	compteurVar += 4;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
 {
+	visit(ctx->expression(0));
+	visit(ctx->expression(1));
 	compteurVar += 4;
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitBitwise_and(ifccParser::Bitwise_andContext *ctx)
 {
+	visit(ctx->expression(0));
+	visit(ctx->expression(1));
 	compteurVar += 4;
 	return 0;
 }

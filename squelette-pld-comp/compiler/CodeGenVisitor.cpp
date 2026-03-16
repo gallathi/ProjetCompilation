@@ -124,7 +124,7 @@ antlrcpp::Any CodeGenVisitor::visitElse_if(ifccParser::Else_ifContext *ctx)
 	cfg.current_bb->exit_false = elseBB;
 
 	cfg.current_bb = elseBB;
-	visit(ctx->block());
+	visitBlockNoAutoGen(ctx->block());
 	cfg.current_bb->exit_true = endifStack.top();
 
 	// cout << "else_if";
@@ -143,7 +143,7 @@ antlrcpp::Any CodeGenVisitor::visitElse(ifccParser::ifccParser::ElseContext *ctx
 	cfg.current_bb->exit_false = elseBB;
 
 	cfg.current_bb = elseBB;
-	visit(ctx->block());
+	visitBlockNoAutoGen(ctx->block());
 	cfg.current_bb->exit_true = endifStack.top();
 
 	return 0;
@@ -151,13 +151,12 @@ antlrcpp::Any CodeGenVisitor::visitElse(ifccParser::ifccParser::ElseContext *ctx
 
 antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *ctx)
 {
-	bool entry = 0;
+	string condVar = std::any_cast<string>(visit(ctx->expression()));
 
 	BasicBlock *endifBB = new BasicBlock(&cfg, cfg.new_BB_name());
 	endifStack.push(endifBB);
 
-	cfg.current_bb->test_var_name = cond;
-	cond[0]++;
+	cfg.current_bb->test_var_name = condVar;
 
 	BasicBlock *thenBB = new BasicBlock(&cfg, cfg.new_BB_name());
 	thenBB->exit_true = endifStack.top(); // unconditional jump to endif at the end of the then block
@@ -175,7 +174,7 @@ antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *c
 	}
 
 	cfg.current_bb = thenBB; // if true block
-	visit(ctx->block());
+	visitBlockNoAutoGen(ctx->block());
 
 	// n'importe quoi qui vient aprés le if, il doit pointer vers le endif final
 	cfg.current_bb->exit_true = endifStack.top(); // jump inconditionelle
