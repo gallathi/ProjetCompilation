@@ -31,11 +31,9 @@ void CFG::gen_asm_epilogue(ostream &o)
 
 void CFG::gen_asm(ostream &o)
 {
-    current_bb = bbs[0];
-    current_bb->gen_asm(o);
-    while (current_bb->exit_true != nullptr)
+    for (BasicBlock *bb : bbs)
     {
-        current_bb = current_bb->exit_true;
+        bb->gen_asm(o);
     }
 }
 

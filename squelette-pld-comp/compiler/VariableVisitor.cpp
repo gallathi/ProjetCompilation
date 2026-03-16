@@ -49,8 +49,21 @@ std::map<std::string, varInfo> VariableVisitor::getVarTable()
 
 antlrcpp::Any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
+	currentBlock = 0;
+	hasReturn = false;
+	while (!s.empty())
+	{
+		s.pop();
+	}
 
 	visit(ctx->block());
+
+	if (!hasReturn)
+	{
+		if (debug)
+			std::cout << "ERREUR : Le programme doit contenir au moins un return." << std::endl;
+		errorCount++;
+	}
 
 	// vérifie variables non utilisées
 	bool allUsed = true;
@@ -182,7 +195,7 @@ antlrcpp::Any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *
 {
 
 	visit(ctx->expression());
-	bool allUsed = true;
+	hasReturn = true;
 
 	return 0;
 }

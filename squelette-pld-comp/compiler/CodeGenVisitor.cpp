@@ -5,10 +5,12 @@
 using namespace std;
 
 CFG cfg;
-bool returned = false;
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
+	hasReturned = false;
+	cfg.current_bb = nullptr;
+
 	for (const auto &[name, info] : varTable)
 	{
 		cfg.add_to_symbol_table(name, Type::INT);
@@ -24,14 +26,20 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
 	BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
+	if (cfg.current_bb != nullptr && !hasReturned)
+	{
+		cfg.current_bb->exit_true = bb;
+	}
 	cfg.add_bb(bb);
 	cfg.current_bb = bb;
+
 	for (auto s : ctx->stmt())
 	{
-		visit(s);
-		if (returned){
+		if (hasReturned)
+		{
 			break;
 		}
+		visit(s);
 	}
 
 	return antlrcpp::Any();
@@ -52,7 +60,7 @@ antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *c
 {
 	string value = std::any_cast<string>(visit(ctx->expression()));
 	cfg.current_bb->add_IRInstr(IRInstr::return_instr, Type::INT, {value});
-	returned = true;
+	hasReturned = true;
 	return antlrcpp::Any();
 }
 

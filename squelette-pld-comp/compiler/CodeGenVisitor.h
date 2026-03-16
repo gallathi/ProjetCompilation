@@ -31,4 +31,5 @@ protected:
 	std::map<std::string, varInfo> varTable;
 	int nextIndex;
 	int compteurVar;
+	bool hasReturned = false;
 };
