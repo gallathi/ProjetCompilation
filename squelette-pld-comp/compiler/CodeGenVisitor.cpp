@@ -46,8 +46,6 @@ return antlrcpp::Any();
 
 antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
-scopeStack.push_back({});
-
 BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
 if (cfg.current_bb != nullptr && !hasReturned)
 {
@@ -55,6 +53,26 @@ cfg.current_bb->exit_true = bb;
 }
 cfg.add_bb(bb);
 cfg.current_bb = bb;
+
+scopeStack.push_back({});
+
+for (auto s : ctx->stmt())
+{
+if (hasReturned)
+{
+break;
+}
+visit(s);
+}
+
+scopeStack.pop_back();
+
+return antlrcpp::Any();
+}
+
+antlrcpp::Any CodeGenVisitor::visitBlockNoAutoGen(ifccParser::BlockContext *ctx)
+{
+scopeStack.push_back({});
 
 for (auto s : ctx->stmt())
 {

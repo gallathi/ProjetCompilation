@@ -25,6 +25,7 @@ public:
 	virtual std::any visitEq(ifccParser::EqContext *ctx) override;
 	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx);
+	virtual std::any visitBlockNoAutoGen(ifccParser::BlockContext *ctx);
 	virtual std::any visitDeclaration_var(ifccParser::Declaration_varContext *ctx) override;
 	virtual std::any visitPar(ifccParser::ParContext *ctx) override;
 	virtual std::any visitNot(ifccParser::NotContext *ctx) override;
