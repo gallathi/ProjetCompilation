@@ -31,9 +31,16 @@ public:
 	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
+	virtual std::any visitPre_incr(ifccParser::Pre_incrContext *ctx) override;
+	virtual std::any visitPre_decr(ifccParser::Pre_decrContext *ctx) override;
+	virtual std::any visitPost_incr(ifccParser::Post_incrContext *ctx) override;
+	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
+	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
+
 
 protected:
 	std::map<std::string, varInfo> varTable;
 	int nextIndex;
 	int compteurVar;
+	std::map<std::string, std::string> postfixOps;
 };

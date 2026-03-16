@@ -118,6 +118,7 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 {
 	visit(ctx->expression());
 	std::string var = ctx->VAR()->getText();
+	std::string op = ctx->op->getText();
 	if (varTable.find(var) == varTable.end())
 	{
 		if (debug)
@@ -141,6 +142,30 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 
 	if (debug)
 		std::cout << "affectation de la variable " << var << std::endl;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
+{
+	compteurVar += 4;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
+{
+	compteurVar += 4;
 	return 0;
 }
 

@@ -25,6 +25,10 @@ affectation_declaration: 'int' VAR '=' expression ';' ;
 
 expression 	: '(' expression ')'                            #par
 			| NOT expression							    #not
+			| VAR PLUS PLUS									#post_incr
+			| VAR MINUS MINUS								#post_decr
+			| PLUS PLUS VAR									#pre_incr
+			| MINUS MINUS VAR                        		#pre_decr
            	| MINUS expression                              #opposite
            	| expression op=(MUL|DIV|MOD) expression        #muldiv
            	| expression op=(PLUS|MINUS) expression         #addsub
@@ -33,7 +37,7 @@ expression 	: '(' expression ')'                            #par
             | expression BITWISE_AND expression				#bitwise_and
             | expression BITWISE_XOR expression				#bitwise_xor
             | expression BITWISE_OR expression				#bitwise_or 
-           	| VAR '=' expression						    #affectation
+           	| VAR op=(AEQ|PEQ|MEQ) expression				#affectation
             | PUTCHAR '(' expression ')'                    #putchar
             | GETCHAR '(' ')'                               #getchar
            	| CONST                                         #const
@@ -73,3 +77,6 @@ NOT : '!';
 BITWISE_OR : '|';
 BITWISE_AND : '&';
 BITWISE_XOR : '^';
+AEQ : '=';
+PEQ : '+=';
+MEQ : '-=';

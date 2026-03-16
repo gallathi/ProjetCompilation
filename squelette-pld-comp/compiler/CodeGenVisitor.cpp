@@ -35,11 +35,58 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
 {
+	std::string op = ctx->op->getText();
 	std::string varName = ctx->VAR()->getText();
-	int varIndex = varTable[varName].index;
 	string value = std::any_cast<string>(visit(ctx->expression()));
-	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
+	
+	if (op == "=") {
+		cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
+	} else if (op == "-=") {
+		cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {varName, varName, value});
+	} else if (op == "+=") {
+		cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {varName, varName, value});
+	}
 
+	return varName;
+}
+
+antlrcpp::Any CodeGenVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
+{
+	string tempVar = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(tempVar, Type::INT);
+	string varName = ctx->VAR()->getText();
+	
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
+	cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {varName, varName, tempVar});
+	
+	return varName;
+}
+
+antlrcpp::Any CodeGenVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
+{
+	string tempVar = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(tempVar, Type::INT);
+	string varName = ctx->VAR()->getText();
+	
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
+	cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {varName, varName, tempVar});
+	
+	return varName;
+}
+
+antlrcpp::Any CodeGenVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
+{
+	string varName = ctx->VAR()->getText();
+	postfixOps[varName] = "++";
+	
+	return varName;
+}
+
+antlrcpp::Any CodeGenVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
+{
+	string varName = ctx->VAR()->getText();
+	postfixOps[varName] = "--";
+	
 	return varName;
 }
 
@@ -201,6 +248,7 @@ antlrcpp::Any CodeGenVisitor::visitEq(ifccParser::EqContext *ctx)
 	}
 	return out;
 }
+
 static int unescapeChar(const std::string &s) {
     // Remove the surrounding single quotes
     // 'a' -> a, '\n' -> \n, 'abc' -> abc
@@ -254,4 +302,22 @@ antlrcpp::Any CodeGenVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
     cfg.add_to_symbol_table(out, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::getchar, Type::INT, {out});
 	return out;
+}
+
+antlrcpp::Any CodeGenVisitor::visitStmt(ifccParser::StmtContext *ctx)
+{
+    visitChildren(ctx);
+    for (auto& op : postfixOps) {
+    	string tempVar = cfg.create_new_tempvar(Type::INT);
+		cfg.add_to_symbol_table(tempVar, Type::INT);
+		
+		cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
+		if (op.second == "++") {
+			cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {op.first, op.first, tempVar});
+		} else if (op.second == "--") {
+			cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {op.first, op.first, tempVar});
+		}
+    }
+    postfixOps.clear();
+	return antlrcpp::Any();
 }

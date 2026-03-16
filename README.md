@@ -41,7 +41,7 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [x] Opérations arithmétiques de base (`+`, `-`, `*`).
 * [x] Division et modulo.
 * [X] Opérations logiques bit-à-bit (`|`, `&`, `^`).
-* [ ] Opérations de comparaison (`==`, `!=`, `<`, `>`).
+* [X] Opérations de comparaison (`==`, `!=`, `<`, `>`).
 * [X] Opérations unaires (`!`, `-`).
 * [x] Affectation (qui retourne aussi une valeur).
 * [ ] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
@@ -52,9 +52,9 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [ ] shadowing.
 * [ ] Les structures de contrôle `if`, `else`, `while`.
 * [ ] Support du `return expression` n'importe où.
-* [x] Vérification qu'une variable utilisée a été déclarée.
+* [ ] Vérification qu'une variable utilisée a été déclarée.
 * [x] Vérification qu'une variable n'est pas déclarée plusieurs fois.
-* [x] Vérification qu'une variable déclarée est utilisée.
+* [ ] Vérification qu'une variable déclarée est utilisée.
 
 ### 🚀 Facultatif (Optional) 
 * [ ] Reciblage vers plusieurs architectures : x86, MSP430, ARM.
