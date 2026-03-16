@@ -184,6 +184,9 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 	visit(ctx->expression());
 	std::string var = ctx->VAR()->getText();
 	std::string op = ctx->op->getText();
+	if (op == "-=" || op  == "+=") {
+		compteurVar += 4;
+	}
 	std::string symbolName = resolveVisibleVarSymbol(var);
 
 	if (symbolName.empty())

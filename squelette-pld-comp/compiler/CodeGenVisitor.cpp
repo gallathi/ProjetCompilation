@@ -105,7 +105,8 @@ return antlrcpp::Any();
 antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
 {
 	std::string op = ctx->op->getText();
-	std::string varName = ctx->VAR()->getText();
+	std::string varSource = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(varSource);
 	string value = std::any_cast<string>(visit(ctx->expression()));
 	
 	if (op == "=") {
@@ -123,8 +124,8 @@ antlrcpp::Any CodeGenVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
 {
 	string tempVar = cfg.create_new_tempvar(Type::INT);
 	cfg.add_to_symbol_table(tempVar, Type::INT);
-	string varName = ctx->VAR()->getText();
-	
+	std::string varSource = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(varSource);
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
 	cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {varName, varName, tempVar});
 	
@@ -135,8 +136,8 @@ antlrcpp::Any CodeGenVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
 {
 	string tempVar = cfg.create_new_tempvar(Type::INT);
 	cfg.add_to_symbol_table(tempVar, Type::INT);
-	string varName = ctx->VAR()->getText();
-	
+	std::string varSource = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(varSource);
 	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
 	cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {varName, varName, tempVar});
 	
@@ -145,7 +146,8 @@ antlrcpp::Any CodeGenVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
 {
-	string varName = ctx->VAR()->getText();
+	std::string varSource = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(varSource);
 	postfixOps[varName] = "++";
 	
 	return varName;
@@ -153,7 +155,8 @@ antlrcpp::Any CodeGenVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
 {
-	string varName = ctx->VAR()->getText();
+	std::string varSource = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(varSource);
 	postfixOps[varName] = "--";
 	
 	return varName;
