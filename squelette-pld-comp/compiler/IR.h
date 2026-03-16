@@ -35,6 +35,9 @@ public:
 		mul,
 		div,
 		mod,
+		bitwise_and,
+		bitwise_xor,
+		bitwise_or,
 		rmem,
 		wmem,
 		call,
@@ -45,6 +48,8 @@ public:
 		cmp_elt,
         cmp_egt,
 		return_instr,
+		getchar,
+		putchar
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
@@ -87,8 +92,18 @@ public:
 			return "div";
 		case IRInstr::mod:
 			return "mod";
+		case IRInstr::bitwise_and:
+			return "bitwise_and";
+		case IRInstr::bitwise_xor:
+			return "bitwise_xor";
+		case IRInstr::bitwise_or:
+			return "bitwise_or";
 		case IRInstr::return_instr:
 			return "return_instr";
+		case IRInstr::getchar:
+		    return "getchar";
+        case IRInstr::putchar:
+            return "putchar";
 		}
 
 		return "unknown";
