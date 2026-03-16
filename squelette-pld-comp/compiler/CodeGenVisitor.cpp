@@ -6,31 +6,100 @@ using namespace std;
 
 CFG cfg;
 
+std::string CodeGenVisitor::createScopedName(const std::string &name)
+{
+declarationCounter++;
+return name + "#" + std::to_string(declarationCounter);
+}
+
+std::string CodeGenVisitor::resolveVisibleVar(const std::string &name) const
+{
+for (auto it = scopeStack.rbegin(); it != scopeStack.rend(); ++it)
+{
+auto found = it->find(name);
+if (found != it->end())
+{
+return found->second;
+}
+}
+return "";
+}
+
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
-	for (const auto &[name, info] : varTable)
-	{
-		cfg.add_to_symbol_table(name, Type::INT);
-	}
+hasReturned = false;
+declarationCounter = 0;
+scopeStack.clear();
+cfg.current_bb = nullptr;
 
-	cfg.gen_asm_prologue(cout, compteurVar);
-	visit(ctx->block());
-	cfg.gen_asm(cout);
-	cfg.gen_asm_epilogue(cout);
-	return antlrcpp::Any();
+for (const auto &[name, info] : varTable)
+{
+cfg.add_to_symbol_table(name, Type::INT);
+}
+
+cfg.gen_asm_prologue(cout, compteurVar);
+visit(ctx->block());
+cfg.gen_asm(cout);
+cfg.gen_asm_epilogue(cout);
+return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
-	BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
-	cfg.add_bb(bb);
-	cfg.current_bb = bb;
-	for (auto s : ctx->stmt())
-	{
-		visit(s);
-	}
+BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
+if (cfg.current_bb != nullptr && !hasReturned)
+{
+cfg.current_bb->exit_true = bb;
+}
+cfg.add_bb(bb);
+cfg.current_bb = bb;
 
-	return antlrcpp::Any();
+scopeStack.push_back({});
+
+for (auto s : ctx->stmt())
+{
+if (hasReturned)
+{
+break;
+}
+visit(s);
+}
+
+scopeStack.pop_back();
+
+return antlrcpp::Any();
+}
+
+antlrcpp::Any CodeGenVisitor::visitBlockNoAutoGen(ifccParser::BlockContext *ctx)
+{
+scopeStack.push_back({});
+
+for (auto s : ctx->stmt())
+{
+if (hasReturned)
+{
+break;
+}
+visit(s);
+}
+
+scopeStack.pop_back();
+
+return antlrcpp::Any();
+}
+
+antlrcpp::Any CodeGenVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
+{
+std::string sourceName = ctx->VAR()->getText();
+std::string scopedName = createScopedName(sourceName);
+scopeStack.back()[sourceName] = scopedName;
+
+if (ctx->declaration_var() != nullptr)
+{
+visit(ctx->declaration_var());
+}
+
+return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
@@ -92,9 +161,10 @@ antlrcpp::Any CodeGenVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
 {
-	string value = std::any_cast<string>(visit(ctx->expression()));
-	cfg.current_bb->add_IRInstr(IRInstr::return_instr, Type::INT, {value});
-	return antlrcpp::Any();
+string value = std::any_cast<string>(visit(ctx->expression()));
+cfg.current_bb->add_IRInstr(IRInstr::return_instr, Type::INT, {value});
+hasReturned = true;
+return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
@@ -108,8 +178,9 @@ antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 {
-	string varName = ctx->VAR()->getText();
-	return varName;
+string sourceName = ctx->VAR()->getText();
+string varName = resolveVisibleVar(sourceName);
+return varName;
 }
 
 antlrcpp::Any CodeGenVisitor::visitPar(ifccParser::ParContext *ctx)
@@ -207,12 +278,12 @@ antlrcpp::Any CodeGenVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitComp(ifccParser::CompContext *ctx)
 {
-	string op = ctx->op->getText();
-	string lhs = std::any_cast<string>(visit(ctx->expression(0)));
-	string rhs = std::any_cast<string>(visit(ctx->expression(1)));
-	string out = cfg.create_new_tempvar(Type::INT);
-	cfg.add_to_symbol_table(out, Type::INT);
-	if (op == "<=")
+string op = ctx->op->getText();
+string lhs = std::any_cast<string>(visit(ctx->expression(0)));
+string rhs = std::any_cast<string>(visit(ctx->expression(1)));
+string out = cfg.create_new_tempvar(Type::INT);
+cfg.add_to_symbol_table(out, Type::INT);
+if (op == "<=")
     {
         cfg.current_bb->add_IRInstr(IRInstr::cmp_elt, Type::INT, {out, lhs, rhs});
     }
@@ -228,7 +299,7 @@ antlrcpp::Any CodeGenVisitor::visitComp(ifccParser::CompContext *ctx)
     {
         cfg.current_bb->add_IRInstr(IRInstr::cmp_gt, Type::INT, {out, lhs, rhs});
     }
-	return out;
+return out;
 }
 
 antlrcpp::Any CodeGenVisitor::visitEq(ifccParser::EqContext *ctx)
@@ -258,9 +329,11 @@ static int unescapeChar(const std::string &s) {
 
     for (size_t i = 0; i < content.size(); ++i) {
         int currentChar = 0;
-        if (content[i] == '\\' && i + 1 < content.size()) {
-            i++; // Move to the escaped character
-            switch (content[i]) {
+        if (content[i] == '\\' && i + 1 < content.size())
+        {
+            i++;
+            switch (content[i])
+            {
                 case 'n':  currentChar = '\n'; break;
                 case 't':  currentChar = '\t'; break;
                 case 'r':  currentChar = '\r'; break;
@@ -291,9 +364,9 @@ antlrcpp::Any CodeGenVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitPutchar(ifccParser::PutcharContext *ctx)
 {
-	string arg = std::any_cast<string>(visit(ctx->expression()));
-    cfg.current_bb->add_IRInstr(IRInstr::putchar, Type::INT, {arg});
-	return antlrcpp::Any();
+string arg = std::any_cast<string>(visit(ctx->expression()));
+cfg.current_bb->add_IRInstr(IRInstr::putchar, Type::INT, {arg});
+return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitGetchar(ifccParser::GetcharContext *ctx)

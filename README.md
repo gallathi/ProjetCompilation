@@ -37,24 +37,24 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [x] Type de données de base `int` (un type 32 bits).
 * [x] Déclaration de variables n'importe où.
 * [x] Constantes entières .
-* [ ] Constantes  caractère (avec simple quote).
+* [x] Constantes  caractère (avec simple quote).
 * [x] Opérations arithmétiques de base (`+`, `-`, `*`).
 * [x] Division et modulo.
-* [X] Opérations logiques bit-à-bit (`|`, `&`, `^`).
-* [X] Opérations de comparaison (`==`, `!=`, `<`, `>`).
+* [x] Opérations logiques bit-à-bit (`|`, `&`, `^`).
+* [x] Opérations de comparaison (`==`, `!=`, `<`, `>`).
 * [X] Opérations unaires (`!`, `-`).
 * [x] Affectation (qui retourne aussi une valeur).
-* [ ] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
+* [x] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
 * [ ] Définition de fonctions avec paramètres, et type de retour `int` ou `void`.
 * [ ] Vérification de la cohérence des appels de fonctions et leurs paramètres.
 * [x] Structure de blocs grâce à `{` et `}`.
 * [x] Support des portées de variables.
-* [ ] shadowing.
+* [x] shadowing.
 * [ ] Les structures de contrôle `if`, `else`, `while`.
-* [ ] Support du `return expression` n'importe où.
-* [ ] Vérification qu'une variable utilisée a été déclarée.
+* [x] Support du `return expression` n'importe où.
+* [x] Vérification qu'une variable utilisée a été déclarée.
 * [x] Vérification qu'une variable n'est pas déclarée plusieurs fois.
-* [ ] Vérification qu'une variable déclarée est utilisée.
+* [x] Vérification qu'une variable déclarée est utilisée.
 
 ### 🚀 Facultatif (Optional) 
 * [ ] Reciblage vers plusieurs architectures : x86, MSP430, ARM.

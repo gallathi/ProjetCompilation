@@ -6,6 +6,8 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 class CodeGenVisitor : public ifccBaseVisitor
 {
@@ -23,6 +25,8 @@ public:
 	virtual std::any visitEq(ifccParser::EqContext *ctx) override;
 	virtual std::any visitOpposite(ifccParser::OppositeContext *ctx) override;
 	virtual std::any visitBlock(ifccParser::BlockContext *ctx);
+	virtual std::any visitBlockNoAutoGen(ifccParser::BlockContext *ctx);
+	virtual std::any visitDeclaration_var(ifccParser::Declaration_varContext *ctx) override;
 	virtual std::any visitPar(ifccParser::ParContext *ctx) override;
 	virtual std::any visitNot(ifccParser::NotContext *ctx) override;
 	virtual std::any visitBitwise_and(ifccParser::Bitwise_andContext *ctx) override;
@@ -43,4 +47,10 @@ protected:
 	int nextIndex;
 	int compteurVar;
 	std::map<std::string, std::string> postfixOps;
+	bool hasReturned = false;
+	int declarationCounter = 0;
+	std::vector<std::unordered_map<std::string, std::string>> scopeStack;
+
+	std::string createScopedName(const std::string &name);
+	std::string resolveVisibleVar(const std::string &name) const;
 };

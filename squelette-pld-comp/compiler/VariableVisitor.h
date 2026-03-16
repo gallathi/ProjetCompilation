@@ -52,4 +52,6 @@ protected:
 	int errorCount = 0;
 	bool debug;
 	int compteurVar = 0;
+	bool hasReturn = false;
+	int declarationCounter = 0;
 };
