@@ -1,19 +1,18 @@
 int main()
 {
     int a;
-    a = 1;
+    a = 2;
 
     int v;
     v = 1;
-    if (a == a)
+    if (a == 1)
     {
         int b;
         b = 1;
     }
-    else if (a == a)
+    else if (a == 2)
     {
-        int c;
-        c = 2;
+        v = 5;
     }
 
     else
@@ -22,6 +21,5 @@ int main()
         i = 1;
     }
 
-    a = 2;
-    return a;
+    return v;
 }

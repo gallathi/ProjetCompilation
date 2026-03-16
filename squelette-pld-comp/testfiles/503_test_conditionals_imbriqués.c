@@ -7,7 +7,7 @@ int main()
     {
         int f;
         f = 1;
-        if (b)
+        if (f > 1)
         {
             int g;
             g = 1;
@@ -17,7 +17,7 @@ int main()
             int k;
             k = 1;
 
-            if (c)
+            if (k > 1)
             {
                 int y;
                 y = 1;
@@ -35,7 +35,7 @@ int main()
     }
     int z;
     z = 1;
-    if (d)
+    if (z > 1)
     {
         int h;
         h = 1;

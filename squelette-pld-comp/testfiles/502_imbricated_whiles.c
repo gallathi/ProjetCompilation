@@ -10,6 +10,8 @@ int main()
         {
             a = 3;
         }
+        int u;
+        u = 1;
     }
 
     return a;

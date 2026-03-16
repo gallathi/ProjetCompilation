@@ -172,7 +172,6 @@ antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *c
 	{
 		visit(s);
 	}
-
 	cfg.current_bb = thenBB; // if true block
 	visitBlockNoAutoGen(ctx->block());
 
@@ -198,15 +197,16 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 	BasicBlock *nextBlock = new BasicBlock(&cfg, cfg.new_BB_name());
 	cfg.add_bb(nextBlock);
 
+	cfg.current_bb->exit_true = condBB;
+
 	condBB->test_var_name = condVar;
 	condBB->exit_true = bodyBB;
 	condBB->exit_false = nextBlock;
 
-	bodyBB->exit_true = condBB;
-
 	cfg.current_bb = bodyBB;
 	visitBlockNoAutoGen(ctx->block());
 
+	cfg.current_bb->exit_true = condBB;
 	cfg.current_bb = nextBlock;
 
 	return 0;
