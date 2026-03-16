@@ -16,10 +16,15 @@ stmt
     | block
     | expression ';'
     | conditional
+    | while_conditional
     ;
 
 conditional
     : 'if' '(' expression ')' block else_stmt*
+    ;
+
+while_conditional
+    : 'while' '(' expression ')' block
     ;
 
 else_stmt

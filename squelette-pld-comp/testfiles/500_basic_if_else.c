@@ -5,10 +5,6 @@ int main()
 
     int v;
     v = 1;
-    {
-        int p;
-        p = 2;
-    }
     if (a == a)
     {
         int b;

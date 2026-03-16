@@ -39,6 +39,7 @@ public:
 	virtual std::any visitConditional(ifccParser::ConditionalContext *ctx);
 	virtual std::any visitElse(ifccParser::ElseContext *ctx);
 	virtual std::any visitElse_if(ifccParser::Else_ifContext *ctx);
+	virtual std::any visitWhile_conditional(ifccParser::While_conditionalContext *ctx);
 
 protected:
 	std::map<std::string, varInfo> varTable;
