@@ -44,7 +44,7 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 	return antlrcpp::Any();
 }
 
-BasicBlock *endifBB;
+std::stack<BasicBlock *> endifStack;
 
 antlrcpp::Any CodeGenVisitor::visitElse_if(ifccParser::Else_ifContext *ctx)
 {
@@ -54,15 +54,15 @@ antlrcpp::Any CodeGenVisitor::visitElse_if(ifccParser::Else_ifContext *ctx)
 	cond[0]++;
 
 	cfg.add_bb(elseBB);
-	elseBB->exit_true = endifBB;
+	elseBB->exit_true = endifStack.top();
 
 	cfg.current_bb->exit_false = elseBB;
 
 	cfg.current_bb = elseBB;
 	visit(ctx->block());
-	cfg.current_bb = elseBB;
+	cfg.current_bb->exit_true = endifStack.top();
 
-	cout << "else_if";
+	// cout << "else_if";
 
 	return 0;
 }
@@ -72,19 +72,14 @@ antlrcpp::Any CodeGenVisitor::visitElse(ifccParser::ifccParser::ElseContext *ctx
 
 	BasicBlock *elseBB = new BasicBlock(&cfg, cfg.new_BB_name());
 
-	elseBB->test_var_name = cond;
-	cond[0]++;
-
 	cfg.add_bb(elseBB);
-	elseBB->exit_true = endifBB;
+	elseBB->exit_true = endifStack.top();
 
 	cfg.current_bb->exit_false = elseBB;
 
 	cfg.current_bb = elseBB;
 	visit(ctx->block());
-	cfg.current_bb = elseBB;
-
-	cout << "else_if";
+	cfg.current_bb->exit_true = endifStack.top();
 
 	return 0;
 }
@@ -93,16 +88,19 @@ antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *c
 {
 	bool entry = 0;
 
-	endifBB = new BasicBlock(&cfg, cfg.new_BB_name());
+	BasicBlock *endifBB = new BasicBlock(&cfg, cfg.new_BB_name());
+	endifStack.push(endifBB);
+
 	cfg.current_bb->test_var_name = cond;
 	cond[0]++;
 
 	BasicBlock *thenBB = new BasicBlock(&cfg, cfg.new_BB_name());
-	cfg.current_bb->exit_true = thenBB;
-	cfg.current_bb->exit_false = endifBB;
-
-	thenBB->exit_true = endifBB; // unconditional jump to endif at the end of the then block
+	thenBB->exit_true = endifStack.top(); // unconditional jump to endif at the end of the then block
 	cfg.add_bb(thenBB);
+
+	// the parent block
+	cfg.current_bb->exit_true = thenBB;
+	cfg.current_bb->exit_false = endifStack.top(); // will be changed by next block if there is an else if or else
 
 	// cfg.current_bb = endifBB; // default end of graph, will change if there is another conditionals
 
@@ -114,10 +112,13 @@ antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *c
 	cfg.current_bb = thenBB; // if true block
 	visit(ctx->block());
 
-	cfg.current_bb->exit_true = endifBB; // jump inconditionelle
-	cfg.current_bb = endifBB;
+	// n'importe quoi qui vient aprés le if, il doit pointer vers le endif final
+	cfg.current_bb->exit_true = endifStack.top(); // jump inconditionelle
 
-	cfg.add_bb(endifBB);
+	cfg.add_bb(endifStack.top());
+	cfg.current_bb = endifStack.top(); // the rest of the program will add to the endif block
+
+	endifStack.pop();
 
 	return 0;
 }

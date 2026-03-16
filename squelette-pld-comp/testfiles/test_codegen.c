@@ -9,10 +9,20 @@ int main()
     {
         int g;
         g = 1;
+        if (b)
+        {
+            int j;
+            j = 1;
+        }
+        else
+        {
+            int k;
+            k = 1;
+        }
     }
     int z;
     z = 1;
-    if (b)
+    if (c)
     {
         int h;
         h = 1;
