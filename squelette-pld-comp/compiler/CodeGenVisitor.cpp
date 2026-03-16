@@ -6,9 +6,30 @@ using namespace std;
 
 CFG cfg;
 
+std::string CodeGenVisitor::createScopedName(const std::string &name)
+{
+	declarationCounter++;
+	return name + "#" + std::to_string(declarationCounter);
+}
+
+std::string CodeGenVisitor::resolveVisibleVar(const std::string &name) const
+{
+	for (auto it = scopeStack.rbegin(); it != scopeStack.rend(); ++it)
+	{
+		auto found = it->find(name);
+		if (found != it->end())
+		{
+			return found->second;
+		}
+	}
+	return "";
+}
+
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
 	hasReturned = false;
+	declarationCounter = 0;
+	scopeStack.clear();
 	cfg.current_bb = nullptr;
 
 	for (const auto &[name, info] : varTable)
@@ -25,6 +46,8 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
+	scopeStack.push_back({});
+
 	BasicBlock *bb = new BasicBlock(&cfg, cfg.new_BB_name());
 	if (cfg.current_bb != nullptr && !hasReturned)
 	{
@@ -42,15 +65,30 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 		visit(s);
 	}
 
+	scopeStack.pop_back();
+
+	return antlrcpp::Any();
+}
+
+antlrcpp::Any CodeGenVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
+{
+	std::string sourceName = ctx->VAR()->getText();
+	std::string scopedName = createScopedName(sourceName);
+	scopeStack.back()[sourceName] = scopedName;
+
+	if (ctx->declaration_var() != nullptr)
+	{
+		visit(ctx->declaration_var());
+	}
+
 	return antlrcpp::Any();
 }
 
 antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
 {
-	std::string varName = ctx->VAR()->getText();
-	int varIndex = varTable[varName].index;
+	std::string sourceName = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(sourceName);
 	string value = std::any_cast<string>(visit(ctx->expression()));
-	cfg.add_to_symbol_table(varName, Type::INT);
 	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
 
 	return varName;
@@ -75,7 +113,8 @@ antlrcpp::Any CodeGenVisitor::visitConst(ifccParser::ConstContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitVar(ifccParser::VarContext *ctx)
 {
-	string varName = ctx->VAR()->getText();
+	string sourceName = ctx->VAR()->getText();
+	string varName = resolveVisibleVar(sourceName);
 	return varName;
 }
 
