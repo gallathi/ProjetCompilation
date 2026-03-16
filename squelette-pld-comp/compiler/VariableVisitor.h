@@ -36,6 +36,10 @@ public:
 	virtual std::any visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx) override;
 	virtual std::any visitBitwise_or(ifccParser::Bitwise_orContext *ctx) override;
 	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
+	virtual std::any visitPre_incr(ifccParser::Pre_incrContext *ctx) override;
+	virtual std::any visitPre_decr(ifccParser::Pre_decrContext *ctx) override;
+	virtual std::any visitPost_incr(ifccParser::Post_incrContext *ctx) override;
+	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();

@@ -40,11 +40,17 @@ public:
 	virtual std::any visitElse(ifccParser::ElseContext *ctx);
 	virtual std::any visitElse_if(ifccParser::Else_ifContext *ctx);
 	virtual std::any visitWhile_conditional(ifccParser::While_conditionalContext *ctx);
+	virtual std::any visitPre_incr(ifccParser::Pre_incrContext *ctx) override;
+	virtual std::any visitPre_decr(ifccParser::Pre_decrContext *ctx) override;
+	virtual std::any visitPost_incr(ifccParser::Post_incrContext *ctx) override;
+	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
+	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
 
 protected:
 	std::map<std::string, varInfo> varTable;
 	int nextIndex;
 	int compteurVar;
+	std::map<std::string, std::string> postfixOps;
 	bool hasReturned = false;
 	int declarationCounter = 0;
 	std::vector<std::unordered_map<std::string, std::string>> scopeStack;
