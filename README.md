@@ -65,7 +65,7 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [ ] Pointeurs.
 * [x] `break` et `continue`.
 * [ ] Les chaînes de caractères représentées par des tableaux de `char`.
-* [ ] Possibilité d'initialiser une variable lors de sa déclaration.
+* [x] Possibilité d'initialiser une variable lors de sa déclaration.
 * [ ] `switch...case`.
 * [ ] Les opérateurs logiques paresseux `||`, `&&`.
 * [x] Opérateurs d'affectation (`+=`, `-=`) et d'incrémentation/décrémentation (`++`, `--`).

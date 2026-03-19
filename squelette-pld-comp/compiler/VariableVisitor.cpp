@@ -151,7 +151,7 @@ antlrcpp::Any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 }
 antlrcpp::Any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
-	std::string var = ctx->VAR()->getText();
+	std::string var = ctx->VAR() != nullptr ? ctx->VAR()->getText() : ctx->decla_affect()->VAR()->getText();
 	if (checkIfVarInCurrentBlock(var))
 	{
 		if (debug)
@@ -175,6 +175,8 @@ antlrcpp::Any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varC
 
 	if (debug)
 		std::cout << "déclaration de " << var << " (" << symbolName << ") : " << info.index << std::endl;
+	if (ctx->VAR() == nullptr)
+		visit(ctx->decla_affect());
 	if (ctx->declaration_var() != nullptr)
 		visit(ctx->declaration_var());
 	return 0;
@@ -188,6 +190,28 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 	if (op == "-=" || op  == "+=") {
 		compteurVar += 4;
 	}
+	std::string symbolName = resolveVisibleVarSymbol(var);
+
+	if (symbolName.empty())
+	{
+		if (debug)
+			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
+		errorCount++;
+		return 0;
+	}
+
+	varTable[symbolName].used = true;
+	varTable[symbolName].affected = true;
+
+	if (debug)
+		std::cout << "affectation de la variable " << var << std::endl;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitDecla_affect(ifccParser::Decla_affectContext *ctx)
+{
+	visit(ctx->expression());
+	std::string var = ctx->VAR()->getText();
 	std::string symbolName = resolveVisibleVarSymbol(var);
 
 	if (symbolName.empty())

@@ -46,6 +46,7 @@ public:
 	virtual std::any visitPost_incr(ifccParser::Post_incrContext *ctx) override;
 	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
 	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
+	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
 
 protected:
 	std::map<std::string, varInfo> varTable;

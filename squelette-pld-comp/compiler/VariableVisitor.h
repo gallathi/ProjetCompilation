@@ -42,6 +42,8 @@ public:
 	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
 	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
 	virtual std::any visitWhile_conditional(ifccParser::While_conditionalContext *ctx) override;
+	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
+
 
 	int getErrorCount();
 	int getNextOffset();

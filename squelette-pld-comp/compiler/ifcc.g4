@@ -10,11 +10,9 @@ block
 
 stmt 
     : declaration
-    | declaration_var
     | CONTINUE ';'
     | BREAK ';'
     | return_stmt
-    | affectation_declaration
     | block
     | expression ';'
     | conditional
@@ -36,9 +34,8 @@ else_stmt
 
 
 declaration : 'int' declaration_var ';' ;
-declaration_var : VAR ',' declaration_var | VAR ;
+declaration_var : (VAR|decla_affect) ',' declaration_var | (VAR|decla_affect) ;
 return_stmt : 'return' expression ';' ;
-affectation_declaration: 'int' VAR '=' expression ';' ;
 
 
 expression 	: '(' expression ')'                            #par
@@ -63,6 +60,7 @@ expression 	: '(' expression ')'                            #par
            	| VAR                                           #var
             ;
 
+decla_affect : VAR AEQ expression ;
 
 CHARCONST
     : '\'' ( ~['\\\r\n] | EscapeSequence )+ '\'' ;

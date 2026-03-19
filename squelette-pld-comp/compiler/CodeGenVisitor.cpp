@@ -97,10 +97,13 @@ antlrcpp::Any CodeGenVisitor::visitBlockNoAutoGen(ifccParser::BlockContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
-	std::string sourceName = ctx->VAR()->getText();
+	std::string sourceName = ctx->VAR() != nullptr ? ctx->VAR()->getText() : ctx->decla_affect()->VAR()->getText();
 	std::string scopedName = createScopedName(sourceName);
 	scopeStack.back()[sourceName] = scopedName;
 
+	if (ctx->VAR() == nullptr) {
+		visit(ctx->decla_affect());
+	}
 	if (ctx->declaration_var() != nullptr)
 	{
 		visit(ctx->declaration_var());
@@ -239,6 +242,17 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 	{
 		cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {varName, varName, value});
 	}
+
+	return varName;
+}
+
+antlrcpp::Any CodeGenVisitor::visitDecla_affect(ifccParser::Decla_affectContext *ctx)
+{
+	std::string varSource = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(varSource);
+	string value = std::any_cast<string>(visit(ctx->expression()));
+
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
 
 	return varName;
 }
