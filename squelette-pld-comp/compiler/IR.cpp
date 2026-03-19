@@ -107,6 +107,12 @@ void BasicBlock::gen_asm(ostream &o)
     }
     if (exit_true != nullptr)
     {
+    	if (exit_false != nullptr)
+    	{
+        	o << "    movl " << cfg->IR_reg_to_asm(test_var_name) << ", %ecx" << endl;
+        	o << "    testl %ecx, %ecx" << endl;
+        	o << "    jz " << exit_false->label << endl;
+        }
         o << "    jmp " << exit_true->label << endl;
     }
 }

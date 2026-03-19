@@ -3,6 +3,7 @@ int main()
     int a;
     a = 1;
     int counter;
+    counter = 1;
 
     while (a <= 10)
     {

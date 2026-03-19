@@ -188,8 +188,6 @@ antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *c
 
 antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_conditionalContext *ctx)
 {
-	string condVar = std::any_cast<string>(visit(ctx->expression()));
-
 	BasicBlock *condBB = new BasicBlock(&cfg, cfg.new_BB_name());
 	cfg.add_bb(condBB);
 	BasicBlock *bodyBB = new BasicBlock(&cfg, cfg.new_BB_name());
@@ -198,10 +196,13 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 	cfg.add_bb(nextBlock);
 
 	cfg.current_bb->exit_true = condBB;
+	
+	cfg.current_bb = condBB;
+	string condVar = std::any_cast<string>(visit(ctx->expression()));
 
-	condBB->test_var_name = condVar;
-	condBB->exit_true = bodyBB;
-	condBB->exit_false = nextBlock;
+	cfg.current_bb->test_var_name = condVar;
+	cfg.current_bb->exit_true = bodyBB;
+	cfg.current_bb->exit_false = nextBlock;
 
 	cfg.current_bb = bodyBB;
 	visitBlockNoAutoGen(ctx->block());
