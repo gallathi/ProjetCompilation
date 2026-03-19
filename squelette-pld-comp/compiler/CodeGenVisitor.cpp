@@ -194,6 +194,11 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 	cfg.add_bb(bodyBB);
 	BasicBlock *nextBlock = new BasicBlock(&cfg, cfg.new_BB_name());
 	cfg.add_bb(nextBlock);
+	
+	pair<BasicBlock*, BasicBlock*> newLoop;
+	newLoop.first = condBB;
+	newLoop.second = nextBlock;
+	loopStack.push_back(newLoop);
 
 	cfg.current_bb->exit_true = condBB;
 	
@@ -209,6 +214,8 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 
 	cfg.current_bb->exit_true = condBB;
 	cfg.current_bb = nextBlock;
+	
+	loopStack.pop_back();
 
 	return 0;
 }
@@ -513,6 +520,11 @@ antlrcpp::Any CodeGenVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitStmt(ifccParser::StmtContext *ctx)
 {
+	if (ctx->CONTINUE() != nullptr) {
+		cfg.current_bb->add_IRInstr(IRInstr::jump, Type::INT, {loopStack.back().first->label});
+	} else if (ctx->BREAK() != nullptr) {
+		cfg.current_bb->add_IRInstr(IRInstr::jump, Type::INT, {loopStack.back().second->label});
+	}
 	visitChildren(ctx);
 	for (auto &op : postfixOps)
 	{

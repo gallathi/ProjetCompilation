@@ -11,6 +11,8 @@ block
 stmt 
     : declaration
     | declaration_var
+    | CONTINUE ';'
+    | BREAK ';'
     | return_stmt
     | affectation_declaration
     | block
@@ -71,13 +73,11 @@ fragment EscapeSequence
     | '\\' [0-7]+
     ;
 
-CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
 DIRECTIVE : '#' .*? '\n' -> skip ;
 WS    : [ \t\r\n] -> channel(HIDDEN);
 PUTCHAR : 'putchar';
 GETCHAR : 'getchar';
-VAR : [a-zA-Z][a-zA-Z0-9_]* ;
 PLUS : '+';
 MINUS : '-';
 MUL : '*';
@@ -96,3 +96,7 @@ BITWISE_XOR : '^';
 AEQ : '=';
 PEQ : '+=';
 MEQ : '-=';
+CONTINUE : 'continue';
+BREAK : 'break';
+CONST : [0-9]+ ;
+VAR : [a-zA-Z][a-zA-Z0-9_]* ;

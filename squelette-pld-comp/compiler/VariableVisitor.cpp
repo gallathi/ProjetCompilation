@@ -209,24 +209,48 @@ antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *
 antlrcpp::Any VariableVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
 {
 	compteurVar += 4;
+	visitChildren(ctx);
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
 {
 	compteurVar += 4;
+	visitChildren(ctx);
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
 {
 	compteurVar += 4;
+	visitChildren(ctx);
 	return 0;
 }
 
 antlrcpp::Any VariableVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
 {
 	compteurVar += 4;
+	visitChildren(ctx);
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitWhile_conditional(ifccParser::While_conditionalContext *ctx)
+{
+	loopLevel++;
+	visitChildren(ctx);
+	loopLevel--;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitStmt(ifccParser::StmtContext *ctx)
+{
+	if (loopLevel == 0 && (ctx->CONTINUE() != nullptr || ctx->BREAK() != nullptr)) {
+		if (debug)
+			std::cout << "ERREUR : Une instruction réservée aux boucles est utilisée hors d'une boucle." << std::endl;
+		errorCount++;
+	} else {
+		visitChildren(ctx);
+	}
 	return 0;
 }
 

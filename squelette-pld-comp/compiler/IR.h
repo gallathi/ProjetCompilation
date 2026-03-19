@@ -49,7 +49,8 @@ public:
 		cmp_egt,
 		return_instr,
 		getchar,
-		putchar
+		putchar,
+		jump
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
@@ -104,6 +105,8 @@ public:
 			return "getchar";
 		case IRInstr::putchar:
 			return "putchar";
+		case IRInstr::jump:
+			return "jump";
 		}
 
 		return "unknown";

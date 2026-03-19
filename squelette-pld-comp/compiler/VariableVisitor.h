@@ -40,6 +40,8 @@ public:
 	virtual std::any visitPre_decr(ifccParser::Pre_decrContext *ctx) override;
 	virtual std::any visitPost_incr(ifccParser::Post_incrContext *ctx) override;
 	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
+	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
+	virtual std::any visitWhile_conditional(ifccParser::While_conditionalContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();
@@ -54,4 +56,5 @@ protected:
 	int compteurVar = 0;
 	bool hasReturn = false;
 	int declarationCounter = 0;
+	int loopLevel = 0;
 };

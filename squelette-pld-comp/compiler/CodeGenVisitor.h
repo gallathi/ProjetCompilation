@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 class CodeGenVisitor : public ifccBaseVisitor
 {
@@ -54,6 +55,7 @@ protected:
 	bool hasReturned = false;
 	int declarationCounter = 0;
 	std::vector<std::unordered_map<std::string, std::string>> scopeStack;
+	std::vector<std::pair<BasicBlock*, BasicBlock*>> loopStack;
 
 	std::string createScopedName(const std::string &name);
 	std::string resolveVisibleVar(const std::string &name) const;
