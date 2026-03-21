@@ -41,6 +41,7 @@ public:
 		rmem,
 		wmem,
 		call,
+		load_param,
 		cmp_eq,
 		cmp_neq,
 		cmp_lt,
@@ -76,6 +77,8 @@ public:
 			return "wmem";
 		case IRInstr::call:
 			return "call";
+		case IRInstr::load_param:
+			return "load_param";
 		case IRInstr::cmp_eq:
 			return "cmp_eq";
 		case IRInstr::cmp_neq:
@@ -180,7 +183,7 @@ protected:
 class CFG
 {
 public:
-	CFG() {}
+	CFG() : nextFreeSymbolIndex(4), nextBBnumber(0), functionName(""), returnLabel("return_exit_label"), current_bb(nullptr) {}
 	virtual ~CFG();
 
 	void add_bb(BasicBlock *bb);
@@ -188,8 +191,10 @@ public:
 	// x86 code generation: could be encapsulated in a processor class in a retargetable compiler
 	void gen_asm(ostream &o);
 	string IR_reg_to_asm(string reg); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
-	void gen_asm_prologue(ostream &o, int compteurVar);
-	void gen_asm_epilogue(ostream &o);
+	void set_function_name(const string &name);
+	string get_return_label() const;
+	void gen_asm_prologue(ostream &o, int compteurVar, bool emitGlobal = false);
+	void gen_asm_epilogue(ostream &o, bool emitStackNote = false);
 
 	// symbol table methods
 	void add_to_symbol_table(string name, Type t);
@@ -206,6 +211,8 @@ protected:
 	map<string, int> SymbolIndex; /**< part of the symbol table  */
 	int nextFreeSymbolIndex;	  /**< to allocate new symbols in the symbol table */
 	int nextBBnumber;			  /**< just for naming */
+	string functionName;
+	string returnLabel;
 
 	vector<BasicBlock *> bbs; /**< all the basic blocks of this CFG*/
 };

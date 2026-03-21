@@ -12,10 +12,15 @@
 class CodeGenVisitor : public ifccBaseVisitor
 {
 public:
-	CodeGenVisitor(std::map<std::string, varInfo> table, int index, int compteurVar) : varTable(table), nextIndex(index), compteurVar(compteurVar) {}
+	CodeGenVisitor(const std::map<std::string, FunctionSemanticState> &functionStates,
+		const std::map<std::string, FunctionSignature> &functionSignatures)
+		: functionStates(functionStates), functionSignatures(functionSignatures) {}
 	virtual ~CodeGenVisitor() {}
 	virtual std::any visitProg(ifccParser::ProgContext *ctx) override;
+	virtual std::any visitFunction_def(ifccParser::Function_defContext *ctx) override;
+	virtual std::any visitParam(ifccParser::ParamContext *ctx) override;
 	virtual std::any visitAffectation(ifccParser::AffectationContext *ctx) override;
+	virtual std::any visitAffectation_declaration(ifccParser::Affectation_declarationContext *ctx) override;
 	virtual std::any visitConst(ifccParser::ConstContext *ctx) override;
 	virtual std::any visitVar(ifccParser::VarContext *ctx) override;
 	virtual std::any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override;
@@ -35,15 +40,20 @@ public:
 	virtual std::any visitCharconst(ifccParser::CharconstContext *ctx) override;
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
+	virtual std::any visitCall(ifccParser::CallContext *ctx) override;
 
 protected:
-	std::map<std::string, varInfo> varTable;
-	int nextIndex;
-	int compteurVar;
+	std::map<std::string, FunctionSemanticState> functionStates;
+	std::map<std::string, FunctionSignature> functionSignatures;
+	std::string currentFunction;
+	std::map<std::string, varInfo> currentVarTable;
+	int currentFrameBytes = 0;
 	bool hasReturned = false;
 	int declarationCounter = 0;
+	int currentParamIndex = 0;
 	std::vector<std::unordered_map<std::string, std::string>> scopeStack;
 
 	std::string createScopedName(const std::string &name);
 	std::string resolveVisibleVar(const std::string &name) const;
+	void bindFunctionState(const std::string &name);
 };

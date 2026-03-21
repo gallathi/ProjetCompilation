@@ -2,7 +2,15 @@ grammar ifcc;
 
 axiom : prog EOF ;
 
-prog : 'int' 'main' '(' ')' block;
+prog : function_def+;
+
+function_def : type VAR '(' param_list? ')' block;
+
+param_list : param (',' param)*;
+
+param : type VAR;
+
+type : 'int' | 'void';
 
 block
     : '{' stmt* '}'
@@ -10,7 +18,6 @@ block
 
 stmt 
     : declaration
-    | declaration_var
     | return_stmt
     | affectation_declaration
     | block
@@ -19,8 +26,9 @@ stmt
 
 declaration : 'int' declaration_var ';' ;
 declaration_var : VAR ',' declaration_var | VAR ;
-return_stmt : 'return' expression ';' ;
+return_stmt : 'return' expression? ';' ;
 affectation_declaration: 'int' VAR '=' expression ';' ;
+arg_list : expression (',' expression)* ;
 
 
 expression 	: '(' expression ')'                            #par
@@ -34,6 +42,7 @@ expression 	: '(' expression ')'                            #par
             | expression BITWISE_XOR expression				#bitwise_xor
             | expression BITWISE_OR expression				#bitwise_or 
            	| VAR '=' expression						    #affectation
+            | VAR '(' arg_list? ')'                         #call
             | PUTCHAR '(' expression ')'                    #putchar
             | GETCHAR '(' ')'                               #getchar
            	| CONST                                         #const

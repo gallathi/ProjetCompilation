@@ -3,305 +3,611 @@
 #include <iostream>
 #include <stack>
 #include <utility>
-#include <string>
+#include <vector>
 
-struct scopedVarInfo
+void VariableVisitor::clearScopedVars()
 {
-	std::string name;
-	std::string symbol;
-	int block;
-};
-
-std::stack<scopedVarInfo> s;
-
-int currentBlock;
-
-bool checkIfVarInStack(std::string var)
-{
-	std::stack<scopedVarInfo> tempStack = s;
-
-	while (!tempStack.empty())
-	{
-		auto top = tempStack.top();
-
-		if (top.name == var)
-		{
-			return true;
-		}
-
-		tempStack.pop();
-	}
-
-	return false;
+    while (!scopedVars.empty())
+    {
+        scopedVars.pop();
+    }
 }
 
-bool checkIfVarInCurrentBlock(std::string var)
+bool VariableVisitor::checkIfVarInCurrentBlock(const std::string &var) const
 {
-	std::stack<scopedVarInfo> tempStack = s;
-
-	while (!tempStack.empty())
-	{
-		auto top = tempStack.top();
-		if (top.block < currentBlock)
-		{
-			break;
-		}
-
-		if (top.block == currentBlock && top.name == var)
-		{
-			return true;
-		}
-
-		tempStack.pop();
-	}
-
-	return false;
+    std::stack<ScopedVarInfo> temp = scopedVars;
+    while (!temp.empty())
+    {
+        auto top = temp.top();
+        if (top.block < scopeBlock)
+        {
+            break;
+        }
+        if (top.block == scopeBlock && top.name == var)
+        {
+            return true;
+        }
+        temp.pop();
+    }
+    return false;
 }
 
-std::string resolveVisibleVarSymbol(const std::string &var)
+std::string VariableVisitor::resolveVisibleVarSymbol(const std::string &var) const
 {
-	std::stack<scopedVarInfo> tempStack = s;
-
-	while (!tempStack.empty())
-	{
-		auto top = tempStack.top();
-		if (top.name == var)
-		{
-			return top.symbol;
-		}
-		tempStack.pop();
-	}
-
-	return "";
+    std::stack<ScopedVarInfo> temp = scopedVars;
+    while (!temp.empty())
+    {
+        auto top = temp.top();
+        if (top.name == var)
+        {
+            return top.symbol;
+        }
+        temp.pop();
+    }
+    return "";
 }
 
 int VariableVisitor::getErrorCount()
 {
-	return errorCount;
+    return errorCount;
 }
 
 int VariableVisitor::getNextOffset()
 {
-	return nextIndex;
+    auto it = functionStates.find("main");
+    if (it == functionStates.end())
+    {
+        return 0;
+    }
+    return it->second.nextIndex;
 }
 
-int VariableVisitor::getCompteurVar() {
-	return compteurVar;
+int VariableVisitor::getCompteurVar()
+{
+    auto it = functionStates.find("main");
+    if (it == functionStates.end())
+    {
+        return 0;
+    }
+    return it->second.compteurVar;
 }
 
 std::map<std::string, varInfo> VariableVisitor::getVarTable()
 {
-	return varTable;
+    auto it = functionStates.find("main");
+    if (it == functionStates.end())
+    {
+        return {};
+    }
+    return it->second.varTable;
 }
 
-antlrcpp::Any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
+const std::map<std::string, FunctionSignature> &VariableVisitor::getFunctionSignatures() const
 {
-	currentBlock = 0;
-	hasReturn = false;
-	declarationCounter = 0;
-	while (!s.empty())
-	{
-		s.pop();
-	}
-
-	visit(ctx->block());
-
-	if (!hasReturn)
-	{
-		if (debug)
-			std::cout << "ERREUR : Le programme doit contenir au moins un return." << std::endl;
-		errorCount++;
-	}
-
-	// vérifie variables non utilisées
-	bool allUsed = true;
-	for (std::map<std::string, varInfo>::iterator it = varTable.begin(); it != varTable.end(); it++)
-	{
-		if (!it->second.used)
-		{
-			allUsed = false;
-		}
-	}
-	if (!allUsed)
-	{
-		if (debug)
-			std::cout << "ERREUR : Toutes les variables déclarées n'ont pas été utilisées" << std::endl;
-		errorCount++;
-	}
-
-	return 0;
+    return functionSignatures;
 }
 
-antlrcpp::Any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
+const std::map<std::string, FunctionSemanticState> &VariableVisitor::getFunctionStates() const
 {
-
-	currentBlock++;
-	for (auto s : ctx->stmt())
-	{
-		visit(s);
-	}
-	// je veux iterer sur la stack pour enlever les variable du precedant block
-	while (!s.empty() && s.top().block == currentBlock)
-	{
-		s.pop();
-	}
-	currentBlock--;
-	return 0;
-}
-antlrcpp::Any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
-{
-	std::string var = ctx->VAR()->getText();
-	if (checkIfVarInCurrentBlock(var))
-	{
-		if (debug)
-			std::cout << "ERREUR : La variable " << var << " est déclarée plusieurs fois." << std::endl;
-		errorCount++;
-		return 0;
-	}
-
-	declarationCounter++;
-	std::string symbolName = var + "#" + std::to_string(declarationCounter);
-
-	varInfo info;
-	info.index = nextIndex;
-	nextIndex += 4;
-	compteurVar += 4;
-	info.used = false;
-	info.affected = false;
-	varTable[symbolName] = info;
-
-	s.push({var, symbolName, currentBlock});
-
-	if (debug)
-		std::cout << "déclaration de " << var << " (" << symbolName << ") : " << info.index << std::endl;
-	if (ctx->declaration_var() != nullptr)
-		visit(ctx->declaration_var());
-	return 0;
+    return functionStates;
 }
 
-antlrcpp::Any VariableVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
+FunctionSemanticState &VariableVisitor::currentState()
 {
-	visit(ctx->expression());
-	std::string var = ctx->VAR()->getText();
-	std::string symbolName = resolveVisibleVarSymbol(var);
-
-	if (symbolName.empty())
-	{
-		if (debug)
-			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
-		errorCount++;
-		return 0;
-	}
-
-	varTable[symbolName].used = true;
-	varTable[symbolName].affected = true;
-
-	if (debug)
-		std::cout << "affectation de la variable " << var << " (" << symbolName << ")" << std::endl;
-	return 0;
+    return functionStates[currentFunction];
 }
 
-antlrcpp::Any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
+void VariableVisitor::reportError(const std::string &msg)
 {
-	std::string var = ctx->VAR()->getText();
-	std::string symbolName = resolveVisibleVarSymbol(var);
-	if (symbolName.empty())
-	{
-		if (debug)
-			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
-		errorCount++;
-		return 0;
-	}
-	if (!varTable[symbolName].affected)
-	{
-		if (debug)
-			std::cout << "ERREUR : La variable " << var << " est utilisée avant afféctation." << std::endl;
-		errorCount++;
-		return 0;
-	}
-
-	varTable[symbolName].used = true;
-	if (debug)
-		std::cout << "utilisation de la variable " << var << " (" << symbolName << ")" << std::endl;
-	return 0;
+    if (debug)
+    {
+        std::cout << "ERREUR : " << msg << std::endl;
+    }
+    errorCount++;
 }
 
-antlrcpp::Any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
+Type VariableVisitor::parseTypeText(const std::string &text) const
 {
-
-	visit(ctx->expression());
-	hasReturn = true;
-
-	return 0;
-}
-antlrcpp::Any VariableVisitor::visitConst(ifccParser::ConstContext *ctx)
-{
-	compteurVar += 4;
-	return 0;
+    if (text == "void")
+    {
+        return Type::VOID;
+    }
+    return Type::INT;
 }
 
-antlrcpp::Any VariableVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
+Type VariableVisitor::evalExpr(ifccParser::ExpressionContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    return std::any_cast<Type>(visit(ctx));
 }
 
-antlrcpp::Any VariableVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
+std::string VariableVisitor::declareVar(const std::string &varName, bool affected)
 {
-	compteurVar += 4;
-	return 0;
+    if (checkIfVarInCurrentBlock(varName))
+    {
+        reportError("La variable " + varName + " est declaree plusieurs fois.");
+        return "";
+    }
+
+    FunctionSemanticState &state = currentState();
+    state.declarationCounter++;
+    std::string symbolName = varName + "#" + std::to_string(state.declarationCounter);
+
+    varInfo info;
+    info.index = state.nextIndex;
+    state.nextIndex += 4;
+    state.compteurVar += 4;
+    info.used = false;
+    info.affected = affected;
+    state.varTable[symbolName] = info;
+
+    scopedVars.push({varName, symbolName, scopeBlock});
+
+    if (debug)
+    {
+        std::cout << "declaration de " << varName << " (" << symbolName << ") : " << info.index << std::endl;
+    }
+
+    return symbolName;
 }
 
-antlrcpp::Any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
+void VariableVisitor::allocateTemporary()
 {
-	compteurVar += 4;
-	return 0;
+    if (currentFunction.empty())
+    {
+        return;
+    }
+    currentState().compteurVar += 4;
 }
 
-antlrcpp::Any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
+std::any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    errorCount = 0;
+    functionSignatures.clear();
+    functionStates.clear();
+    currentFunction.clear();
+    clearScopedVars();
+    scopeBlock = 0;
+
+    for (ifccParser::Function_defContext *fnCtx : ctx->function_def())
+    {
+        std::string fnName = fnCtx->VAR()->getText();
+        if (functionSignatures.count(fnName) != 0)
+        {
+            reportError("La fonction " + fnName + " est definie plusieurs fois.");
+            continue;
+        }
+
+        FunctionSignature sig;
+        sig.returnType = parseTypeText(fnCtx->type()->getText());
+
+        if (fnCtx->param_list() != nullptr)
+        {
+            for (ifccParser::ParamContext *paramCtx : fnCtx->param_list()->param())
+            {
+                Type pType = parseTypeText(paramCtx->type()->getText());
+                if (pType == Type::VOID)
+                {
+                    reportError("Le parametre " + paramCtx->VAR()->getText() + " ne peut pas etre void.");
+                }
+                sig.paramTypes.push_back(pType);
+            }
+        }
+
+        functionSignatures[fnName] = sig;
+    }
+
+    auto mainIt = functionSignatures.find("main");
+    if (mainIt == functionSignatures.end())
+    {
+        reportError("Le programme doit definir main.");
+    }
+    else
+    {
+        if (mainIt->second.returnType != Type::INT)
+        {
+            reportError("main doit retourner int.");
+        }
+        if (!mainIt->second.paramTypes.empty())
+        {
+            reportError("main ne doit pas avoir de parametres.");
+        }
+    }
+
+    // Second pass: bodies, now that all signatures are known. This enables recursion.
+    for (ifccParser::Function_defContext *fnCtx : ctx->function_def())
+    {
+        visit(fnCtx);
+    }
+
+    return {};
 }
 
-antlrcpp::Any VariableVisitor::visitEq(ifccParser::EqContext *ctx)
+std::any VariableVisitor::visitFunction_def(ifccParser::Function_defContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    currentFunction = ctx->VAR()->getText();
+    auto sigIt = functionSignatures.find(currentFunction);
+    if (sigIt == functionSignatures.end())
+    {
+        return {};
+    }
+
+    currentReturnType = sigIt->second.returnType;
+    functionStates[currentFunction] = FunctionSemanticState();
+    clearScopedVars();
+    scopeBlock = 1;
+    hasReturn = false;
+
+    if (ctx->param_list() != nullptr)
+    {
+        size_t i = 0;
+        for (ifccParser::ParamContext *paramCtx : ctx->param_list()->param())
+        {
+            Type pType = sigIt->second.paramTypes[i++];
+            if (pType == Type::VOID)
+            {
+                continue;
+            }
+            std::string symbol = declareVar(paramCtx->VAR()->getText(), true);
+            if (!symbol.empty())
+            {
+                currentState().varTable[symbol].used = true;
+            }
+        }
+    }
+
+    for (ifccParser::StmtContext *stmtCtx : ctx->block()->stmt())
+    {
+        visit(stmtCtx);
+    }
+
+    while (!scopedVars.empty() && scopedVars.top().block == scopeBlock)
+    {
+        scopedVars.pop();
+    }
+
+    if (currentReturnType == Type::INT && !hasReturn && currentFunction != "main")
+    {
+        reportError("La fonction " + currentFunction + " doit retourner une valeur.");
+    }
+
+    bool hasUnused = false;
+    for (const auto &entry : currentState().varTable)
+    {
+        if (!entry.second.used)
+        {
+            hasUnused = true;
+            break;
+        }
+    }
+    if (hasUnused)
+    {
+        reportError("Toutes les variables declarees dans " + currentFunction + " n'ont pas ete utilisees.");
+    }
+
+    currentFunction.clear();
+    scopeBlock = 0;
+    clearScopedVars();
+    return {};
 }
 
-antlrcpp::Any VariableVisitor::visitComp(ifccParser::CompContext *ctx)
+std::any VariableVisitor::visitParam_list(ifccParser::Param_listContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    return visitChildren(ctx);
 }
 
-antlrcpp::Any VariableVisitor::visitNot(ifccParser::NotContext *ctx)
+std::any VariableVisitor::visitParam(ifccParser::ParamContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    return parseTypeText(ctx->type()->getText());
 }
 
-antlrcpp::Any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
+std::any VariableVisitor::visitType(ifccParser::TypeContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    return parseTypeText(ctx->getText());
 }
 
-antlrcpp::Any VariableVisitor::visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx)
+std::any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    scopeBlock++;
+
+    for (ifccParser::StmtContext *stmtCtx : ctx->stmt())
+    {
+        visit(stmtCtx);
+    }
+
+    while (!scopedVars.empty() && scopedVars.top().block == scopeBlock)
+    {
+        scopedVars.pop();
+    }
+
+    scopeBlock--;
+    return {};
 }
 
-antlrcpp::Any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
+std::any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    declareVar(ctx->VAR()->getText(), false);
+    if (ctx->declaration_var() != nullptr)
+    {
+        visit(ctx->declaration_var());
+    }
+    return {};
 }
 
-antlrcpp::Any VariableVisitor::visitBitwise_and(ifccParser::Bitwise_andContext *ctx)
+std::any VariableVisitor::visitAffectation_declaration(ifccParser::Affectation_declarationContext *ctx)
 {
-	compteurVar += 4;
-	return 0;
+    std::string symbol = declareVar(ctx->VAR()->getText(), false);
+    Type rhsType = evalExpr(ctx->expression());
+    if (rhsType == Type::VOID)
+    {
+        reportError("Initialisation invalide de " + ctx->VAR()->getText() + " avec une expression void.");
+    }
+    if (!symbol.empty())
+    {
+        currentState().varTable[symbol].affected = true;
+    }
+    return {};
+}
+
+std::any VariableVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
+{
+    Type rhsType = evalExpr(ctx->expression());
+    if (rhsType == Type::VOID)
+    {
+        reportError("Affectation invalide d'une expression void a " + ctx->VAR()->getText() + ".");
+    }
+
+    std::string var = ctx->VAR()->getText();
+    std::string symbol = resolveVisibleVarSymbol(var);
+    if (symbol.empty())
+    {
+        reportError("La variable " + var + " est utilisee avant declaration.");
+        return Type::INT;
+    }
+
+    currentState().varTable[symbol].used = true;
+    currentState().varTable[symbol].affected = true;
+
+    if (debug)
+    {
+        std::cout << "affectation de la variable " << var << " (" << symbol << ")" << std::endl;
+    }
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
+{
+    std::string var = ctx->VAR()->getText();
+    std::string symbol = resolveVisibleVarSymbol(var);
+    if (symbol.empty())
+    {
+        reportError("La variable " + var + " est utilisee avant declaration.");
+        return Type::INT;
+    }
+
+    if (!currentState().varTable[symbol].affected)
+    {
+        reportError("La variable " + var + " est utilisee avant affectation.");
+        return Type::INT;
+    }
+
+    currentState().varTable[symbol].used = true;
+    if (debug)
+    {
+        std::cout << "utilisation de la variable " << var << " (" << symbol << ")" << std::endl;
+    }
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
+{
+    if (currentReturnType == Type::VOID)
+    {
+        if (ctx->expression() != nullptr)
+        {
+            evalExpr(ctx->expression());
+            reportError("Une fonction void ne peut pas retourner de valeur.");
+        }
+        hasReturn = true;
+        return Type::VOID;
+    }
+
+    if (ctx->expression() == nullptr)
+    {
+        reportError("La fonction " + currentFunction + " doit retourner une valeur int.");
+        hasReturn = true;
+        return Type::INT;
+    }
+
+    Type exprType = evalExpr(ctx->expression());
+    if (exprType == Type::VOID)
+    {
+        reportError("Impossible de retourner une expression de type void.");
+    }
+
+    hasReturn = true;
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitConst(ifccParser::ConstContext *ctx)
+{
+    (void)ctx;
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitPar(ifccParser::ParContext *ctx)
+{
+    return evalExpr(ctx->expression());
+}
+
+std::any VariableVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
+{
+    (void)ctx;
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
+{
+    Type t = evalExpr(ctx->expression());
+    if (t == Type::VOID)
+    {
+        reportError("L'operateur unaire - attend une expression entiere.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations arithmetiques attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations arithmetiques attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitEq(ifccParser::EqContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les comparaisons attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitComp(ifccParser::CompContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les comparaisons attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitNot(ifccParser::NotContext *ctx)
+{
+    Type t = evalExpr(ctx->expression());
+    if (t == Type::VOID)
+    {
+        reportError("L'operateur ! attend une expression entiere.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitBitwise_and(ifccParser::Bitwise_andContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations bit-a-bit attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations bit-a-bit attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations bit-a-bit attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
+{
+    (void)ctx;
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitPutchar(ifccParser::PutcharContext *ctx)
+{
+    Type argType = evalExpr(ctx->expression());
+    if (argType == Type::VOID)
+    {
+        reportError("putchar attend un argument entier.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitCall(ifccParser::CallContext *ctx)
+{
+    std::string functionName = ctx->VAR()->getText();
+    auto it = functionSignatures.find(functionName);
+    if (it == functionSignatures.end())
+    {
+        reportError("La fonction " + functionName + " n'est pas definie.");
+        return Type::INT;
+    }
+
+    std::vector<Type> args;
+    if (ctx->arg_list() != nullptr)
+    {
+        for (ifccParser::ExpressionContext *argExpr : ctx->arg_list()->expression())
+        {
+            args.push_back(evalExpr(argExpr));
+        }
+    }
+
+    const FunctionSignature &sig = it->second;
+    if (args.size() != sig.paramTypes.size())
+    {
+        reportError("La fonction " + functionName + " attend " + std::to_string(sig.paramTypes.size()) + " argument(s), mais " + std::to_string(args.size()) + " ont ete fournis.");
+    }
+
+    size_t common = std::min(args.size(), sig.paramTypes.size());
+    for (size_t i = 0; i < common; ++i)
+    {
+        if (args[i] == Type::VOID || sig.paramTypes[i] != args[i])
+        {
+            reportError("Type incompatible pour l'argument " + std::to_string(i + 1) + " de " + functionName + ".");
+        }
+    }
+
+    if (sig.returnType != Type::VOID)
+    {
+        allocateTemporary();
+    }
+    return sig.returnType;
 }

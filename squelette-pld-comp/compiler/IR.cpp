@@ -2,14 +2,31 @@
 #include <iostream>
 using namespace std;
 
-void CFG::gen_asm_prologue(ostream &o, int compteurVar)
+void CFG::set_function_name(const string &name)
+{
+    functionName = name;
+    returnLabel = name + "_return_exit";
+}
+
+string CFG::get_return_label() const
+{
+    return returnLabel;
+}
+
+void CFG::gen_asm_prologue(ostream &o, int compteurVar, bool emitGlobal)
 {
 #ifdef __APPLE__
-    o << ".globl _main\n";
-    o << " _main: \n";
+    if (emitGlobal)
+    {
+        o << ".globl _" << functionName << "\n";
+    }
+    o << " _" << functionName << ": \n";
 #else
-    o << ".globl main\n";
-    o << " main: \n";
+    if (emitGlobal)
+    {
+        o << ".globl " << functionName << "\n";
+    }
+    o << " " << functionName << ": \n";
 #endif
 
     o << "    pushq %rbp\n";
@@ -17,15 +34,18 @@ void CFG::gen_asm_prologue(ostream &o, int compteurVar)
     o << "    subq $" << compteurVar << ", %rsp" << endl;
 }
 
-void CFG::gen_asm_epilogue(ostream &o)
+void CFG::gen_asm_epilogue(ostream &o, bool emitStackNote)
 {
-    o << "return_exit_label:" << endl;
+    o << returnLabel << ":" << endl;
     o << "    movq %rbp, %rsp\n";
     o << "    popq %rbp\n";
     o << "    ret\n";
 
 #ifndef __APPLE__
-    o << ".section .note.GNU-stack,\"\",@progbits\n";
+    if (emitStackNote)
+    {
+        o << ".section .note.GNU-stack,\"\",@progbits\n";
+    }
 #endif
 }
 
@@ -67,7 +87,8 @@ Type CFG::get_var_type(string name)
 
 string CFG::new_BB_name()
 {
-    string newName = "bb" + to_string(nextBBnumber);
+    string prefix = functionName.empty() ? "bb" : functionName + "_bb";
+    string newName = prefix + to_string(nextBBnumber);
     ++nextBBnumber;
     return newName;
 }
@@ -115,7 +136,7 @@ IRInstr::IRInstr(BasicBlock *bb, Operation op, Type t, vector<string> params) : 
 
 void IRInstr::gen_asm(ostream &o)
 {
-    string regs[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
+    string regs32[] = {"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"};
     switch (op)
     {
     case ldconst:
@@ -174,13 +195,47 @@ void IRInstr::gen_asm(ostream &o)
         }
         break;
     case call:
+    {
         for (int i = 0; i < params.size() - 2 && i < 6; i++)
         {
-            o << "    movl " << bb->cfg->IR_reg_to_asm(params[i + 2]) << ", " << regs[i] << endl;
+            o << "    movl " << bb->cfg->IR_reg_to_asm(params[i + 2]) << ", " << regs32[i] << endl;
         }
-        o << "    call " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+
+        int extraArgs = static_cast<int>(params.size()) - 8;
+        if (extraArgs > 0)
+        {
+            for (int i = static_cast<int>(params.size()) - 1; i >= 8; --i)
+            {
+                o << "    movl " << bb->cfg->IR_reg_to_asm(params[i]) << ", %eax" << endl;
+                o << "    pushq %rax" << endl;
+            }
+        }
+
+        o << "    call " << params[0] << endl;
+
+        if (extraArgs > 0)
+        {
+            o << "    addq $" << (extraArgs * 8) << ", %rsp" << endl;
+        }
+
         o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[1]) << endl;
         break;
+    }
+    case load_param:
+    {
+        int paramIndex = stoi(params[1]);
+        if (paramIndex < 6)
+        {
+            o << "    movl " << regs32[paramIndex] << ", " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        }
+        else
+        {
+            int stackOffset = 16 + ((paramIndex - 6) * 8);
+            o << "    movl " << stackOffset << "(%rbp), %eax" << endl;
+            o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        }
+        break;
+    }
     case cmp_eq:
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
         o << "    cmpl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
@@ -254,7 +309,7 @@ void IRInstr::gen_asm(ostream &o)
         break;
     case return_instr:
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %eax" << endl;
-        o << "    jmp return_exit_label" << endl;
+        o << "    jmp " << bb->cfg->get_return_label() << endl;
         break;
     case getchar:
         o << "    call getchar@PLT" << endl;

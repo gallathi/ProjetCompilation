@@ -68,7 +68,7 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [ ] Possibilité d'initialiser une variable lors de sa déclaration.
 * [ ] `switch...case`.
 * [ ] Les opérateurs logiques paresseux `||`, `&&`.
-* [ ] Opérateurs d'affectation (`+=`, `-=`) et d'incrémentation/décrémentation (`++`, `--`).
+* [x] Opérateurs d'affectation (`+=`, `-=`) et d'incrémentation/décrémentation (`++`, `--`).
 
 ### 📉 Non Prioritaire (Low Priority) 
 * [ ] Les variables globales.
