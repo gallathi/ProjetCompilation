@@ -45,8 +45,8 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [X] Opérations unaires (`!`, `-`).
 * [x] Affectation (qui retourne aussi une valeur).
 * [x] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
-* [ ] Définition de fonctions avec paramètres, et type de retour `int` ou `void`.
-* [ ] Vérification de la cohérence des appels de fonctions et leurs paramètres.
+* [x] Définition de fonctions avec paramètres, et type de retour `int` ou `void`.
+* [x] Vérification de la cohérence des appels de fonctions et leurs paramètres.
 * [x] Structure de blocs grâce à `{` et `}`.
 * [x] Support des portées de variables.
 * [x] shadowing.
