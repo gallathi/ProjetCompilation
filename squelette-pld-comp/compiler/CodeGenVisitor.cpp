@@ -89,10 +89,6 @@ antlrcpp::Any CodeGenVisitor::visitFunction_def(ifccParser::Function_defContext 
 
     for (ifccParser::StmtContext *stmt : ctx->block()->stmt())
     {
-        if (hasReturned)
-        {
-            break;
-        }
         visit(stmt);
     }
 
@@ -131,10 +127,6 @@ antlrcpp::Any CodeGenVisitor::visitBlock(ifccParser::BlockContext *ctx)
 
     for (auto s : ctx->stmt())
     {
-        if (hasReturned)
-        {
-            break;
-        }
         visit(s);
     }
 
@@ -150,9 +142,23 @@ antlrcpp::Any CodeGenVisitor::visitBlockNoAutoGen(ifccParser::BlockContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
-    std::string sourceName = ctx->VAR()->getText();
+    std::string sourceName;
+    if (ctx->decla_affect() != nullptr)
+    {
+        sourceName = ctx->decla_affect()->VAR()->getText();
+    }
+    else
+    {
+        sourceName = ctx->VAR()->getText();
+    }
+
     std::string scopedName = createScopedName(sourceName);
     scopeStack.back()[sourceName] = scopedName;
+
+    if (ctx->decla_affect() != nullptr)
+    {
+        visit(ctx->decla_affect());
+    }
 
     if (ctx->declaration_var() != nullptr)
     {
@@ -307,7 +313,16 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 
 	return varName;
 }
+antlrcpp::Any CodeGenVisitor::visitDecla_affect(ifccParser::Decla_affectContext *ctx)
+{
+	std::string varSource = ctx->VAR()->getText();
+	std::string varName = resolveVisibleVar(varSource);
+	string value = std::any_cast<string>(visit(ctx->expression()));
 
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {varName, value});
+
+	return varName;
+}
 antlrcpp::Any CodeGenVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
 {
 	string tempVar = cfg.create_new_tempvar(Type::INT);
@@ -351,47 +366,7 @@ antlrcpp::Any CodeGenVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
     return varName;
 }
 
-antlrcpp::Any CodeGenVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
-{
-	string tempVar = cfg.create_new_tempvar(Type::INT);
-	cfg.add_to_symbol_table(tempVar, Type::INT);
-	std::string varSource = ctx->VAR()->getText();
-	std::string varName = resolveVisibleVar(varSource);
-	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
-	cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {varName, varName, tempVar});
 
-	return varName;
-}
-
-antlrcpp::Any CodeGenVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
-{
-	string tempVar = cfg.create_new_tempvar(Type::INT);
-	cfg.add_to_symbol_table(tempVar, Type::INT);
-	std::string varSource = ctx->VAR()->getText();
-	std::string varName = resolveVisibleVar(varSource);
-	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
-	cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {varName, varName, tempVar});
-
-	return varName;
-}
-
-antlrcpp::Any CodeGenVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
-{
-	std::string varSource = ctx->VAR()->getText();
-	std::string varName = resolveVisibleVar(varSource);
-	postfixOps[varName] = "++";
-
-	return varName;
-}
-
-antlrcpp::Any CodeGenVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
-{
-	std::string varSource = ctx->VAR()->getText();
-	std::string varName = resolveVisibleVar(varSource);
-	postfixOps[varName] = "--";
-
-	return varName;
-}
 
 antlrcpp::Any CodeGenVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
 {

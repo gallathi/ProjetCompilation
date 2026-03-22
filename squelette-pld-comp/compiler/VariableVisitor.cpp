@@ -325,7 +325,15 @@ std::any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 
 std::any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
-    declareVar(ctx->VAR()->getText(), false);
+    if (ctx->decla_affect() != nullptr)
+    {
+        declareVar(ctx->decla_affect()->VAR()->getText(), false);
+        visit(ctx->decla_affect());
+    }
+    else
+    {
+        declareVar(ctx->VAR()->getText(), false);
+    }
     if (ctx->declaration_var() != nullptr)
     {
         visit(ctx->declaration_var());
@@ -373,7 +381,79 @@ std::any VariableVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
     }
     return Type::INT;
 }
+antlrcpp::Any VariableVisitor::visitDecla_affect(ifccParser::Decla_affectContext *ctx)
+{
+	visit(ctx->expression());
+	std::string var = ctx->VAR()->getText();
+	std::string symbolName = resolveVisibleVarSymbol(var);
 
+	if (symbolName.empty())
+	{
+		if (debug)
+			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
+		errorCount++;
+		return 0;
+	}
+
+	//varTable[symbolName].used = true;
+	//varTable[symbolName].affected = true;
+    currentState().varTable[symbolName].used = true;
+    currentState().varTable[symbolName].affected = true;
+
+
+	if (debug)
+		std::cout << "affectation de la variable " << var << std::endl;
+	return 0;
+}
+antlrcpp::Any VariableVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
+{
+	
+	visitChildren(ctx);
+    allocateTemporary();
+	return Type::INT;
+}
+
+antlrcpp::Any VariableVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
+{
+	
+	visitChildren(ctx);
+    allocateTemporary();
+	return Type::INT;
+}
+
+antlrcpp::Any VariableVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
+{
+	visitChildren(ctx);
+    allocateTemporary();
+	return Type::INT;
+}
+
+antlrcpp::Any VariableVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
+{
+	visitChildren(ctx);
+    allocateTemporary();
+	return Type::INT;
+}
+
+antlrcpp::Any VariableVisitor::visitWhile_conditional(ifccParser::While_conditionalContext *ctx)
+{
+	loopLevel++;
+	visitChildren(ctx);
+	loopLevel--;
+	return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitStmt(ifccParser::StmtContext *ctx)
+{
+	if (loopLevel == 0 && (ctx->CONTINUE() != nullptr || ctx->BREAK() != nullptr)) {
+		if (debug)
+			std::cout << "ERREUR : Une instruction réservée aux boucles est utilisée hors d'une boucle." << std::endl;
+		errorCount++;
+	} else {
+		visitChildren(ctx);
+	}
+	return 0;
+}
 std::any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
 {
     std::string var = ctx->VAR()->getText();

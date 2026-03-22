@@ -42,7 +42,7 @@ else_stmt
 
 
 declaration : 'int' declaration_var ';' ;
-declaration_var : VAR ',' declaration_var | VAR ;
+declaration_var : (VAR|decla_affect) ',' declaration_var | (VAR|decla_affect) ;
 return_stmt : 'return' expression? ';' ;
 affectation_declaration: 'int' VAR '=' expression ';' ;
 arg_list : expression (',' expression)* ;
