@@ -47,10 +47,11 @@ public:
 		cmp_lt,
 		cmp_gt,
 		cmp_elt,
-        cmp_egt,
+		cmp_egt,
 		return_instr,
 		getchar,
-		putchar
+		putchar,
+		jump
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
@@ -65,10 +66,10 @@ public:
 			return "add";
 		case IRInstr::sub:
 			return "sub";
-	    case IRInstr::neg:
-        	return "neg";
-        case IRInstr::bool_not:
-        	return "bool_not";
+		case IRInstr::neg:
+			return "neg";
+		case IRInstr::bool_not:
+			return "bool_not";
 		case IRInstr::mul:
 			return "mul";
 		case IRInstr::rmem:
@@ -82,15 +83,15 @@ public:
 		case IRInstr::cmp_eq:
 			return "cmp_eq";
 		case IRInstr::cmp_neq:
-            return "cmp_neq";
+			return "cmp_neq";
 		case IRInstr::cmp_lt:
 			return "cmp_lt";
 		case IRInstr::cmp_gt:
 			return "cmp_gt";
-        case IRInstr::cmp_elt:
-            return "cmp_elt";
-        case IRInstr::cmp_egt:
-            return "cmp_egt";
+		case IRInstr::cmp_elt:
+			return "cmp_elt";
+		case IRInstr::cmp_egt:
+			return "cmp_egt";
 		case IRInstr::div:
 			return "div";
 		case IRInstr::mod:
@@ -104,9 +105,11 @@ public:
 		case IRInstr::return_instr:
 			return "return_instr";
 		case IRInstr::getchar:
-		    return "getchar";
-        case IRInstr::putchar:
-            return "putchar";
+			return "getchar";
+		case IRInstr::putchar:
+			return "putchar";
+		case IRInstr::jump:
+			return "jump";
 		}
 
 		return "unknown";
@@ -161,13 +164,37 @@ public:
 	void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params);
 
 	// No encapsulation whatsoever here. Feel free to do better.
-	BasicBlock *exit_true = nullptr;	  /**< pointer to the next basic block, true branch. If nullptr, return from procedure */
-	BasicBlock *exit_false = nullptr;	  /**< pointer to the next basic block, false branch. If null_ptr, the basic block ends with an unconditional jump */
-	string label;			  /**< label of the BB, also will be the label in the generated code */
-	CFG *cfg;				  /** < the CFG where this block belongs */
-	vector<IRInstr *> instrs; /** < the instructions themselves. */
-	string test_var_name;	  /** < when generating IR code for an if(expr) or while(expr) etc,
-														  store here the name of the variable that holds the value of expr */
+	BasicBlock *exit_true = nullptr;  /**< pointer to the next basic block, true branch. If nullptr, return from procedure */
+	BasicBlock *exit_false = nullptr; /**< pointer to the next basic block, false branch. If null_ptr, the basic block ends with an unconditional jump */
+	string label;					  /**< label of the BB, also will be the label in the generated code */
+	CFG *cfg;						  /** < the CFG where this block belongs */
+	vector<IRInstr *> instrs;		  /** < the instructions themselves. */
+	string test_var_name;			  /** < when generating IR code for an if(expr) or while(expr) etc,
+																  store here the name of the variable that holds the value of expr */
+	friend ostream &operator<<(ostream &os, const BasicBlock &bb)
+	{
+		os << "BasicBlock " << bb.label << " : " << endl;
+		for (auto instr : bb.instrs)
+		{
+			os << "    " << IRInstr::op_to_string(instr->op) << " ";
+			for (auto param : instr->params)
+			{
+				os << param << " ";
+			}
+			os << endl;
+		}
+		// print the exits of the basic block
+		if (bb.exit_true != nullptr)
+		{
+			os << "    exit_true : " << bb.test_var_name << " " << bb.exit_true->label << endl;
+		}
+		if (bb.exit_false != nullptr)
+		{
+			os << "    exit_false : " << bb.test_var_name << " " << bb.exit_false->label << endl;
+		}
+		return os;
+	}
+
 protected:
 };
 
@@ -205,6 +232,17 @@ public:
 	// basic block management
 	string new_BB_name();
 	BasicBlock *current_bb;
+
+	// overload cout for the CFG for printing basic blocks for debug
+	friend ostream &operator<<(ostream &os, const CFG &cfg)
+	{
+		os << "CFG : " << endl;
+		for (auto bb : cfg.bbs)
+		{
+			os << *bb << endl;
+		}
+		return os;
+	}
 
 protected:
 	map<string, Type> SymbolType; /**< part of the symbol table  */

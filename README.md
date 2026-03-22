@@ -50,7 +50,7 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [x] Structure de blocs grâce à `{` et `}`.
 * [x] Support des portées de variables.
 * [x] shadowing.
-* [ ] Les structures de contrôle `if`, `else`, `while`.
+* [x] Les structures de contrôle `if`, `else`, `while`.
 * [x] Support du `return expression` n'importe où.
 * [x] Vérification qu'une variable utilisée a été déclarée.
 * [x] Vérification qu'une variable n'est pas déclarée plusieurs fois.
@@ -63,9 +63,9 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [ ] Propagation de variables constantes (avec analyse du data-flow).
 * [ ] Tableaux (à une dimension).
 * [ ] Pointeurs.
-* [ ] `break` et `continue`.
+* [x] `break` et `continue`.
 * [ ] Les chaînes de caractères représentées par des tableaux de `char`.
-* [ ] Possibilité d'initialiser une variable lors de sa déclaration.
+* [x] Possibilité d'initialiser une variable lors de sa déclaration.
 * [ ] `switch...case`.
 * [ ] Les opérateurs logiques paresseux `||`, `&&`.
 * [x] Opérateurs d'affectation (`+=`, `-=`) et d'incrémentation/décrémentation (`++`, `--`).

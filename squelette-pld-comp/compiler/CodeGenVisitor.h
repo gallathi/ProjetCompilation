@@ -3,11 +3,13 @@
 #include "antlr4-runtime.h"
 #include "generated/ifccBaseVisitor.h"
 #include "VariableVisitor.h"
+#include "IR.h"
 
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 class CodeGenVisitor : public ifccBaseVisitor
 {
@@ -41,6 +43,16 @@ public:
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
 	virtual std::any visitCall(ifccParser::CallContext *ctx) override;
+	virtual std::any visitConditional(ifccParser::ConditionalContext *ctx);
+	virtual std::any visitElse(ifccParser::ElseContext *ctx);
+	virtual std::any visitElse_if(ifccParser::Else_ifContext *ctx);
+	virtual std::any visitWhile_conditional(ifccParser::While_conditionalContext *ctx);
+	virtual std::any visitPre_incr(ifccParser::Pre_incrContext *ctx) override;
+	virtual std::any visitPre_decr(ifccParser::Pre_decrContext *ctx) override;
+	virtual std::any visitPost_incr(ifccParser::Post_incrContext *ctx) override;
+	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
+	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
+	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
 
 protected:
 	std::map<std::string, FunctionSemanticState> functionStates;
@@ -48,10 +60,12 @@ protected:
 	std::string currentFunction;
 	std::map<std::string, varInfo> currentVarTable;
 	int currentFrameBytes = 0;
+	std::map<std::string, std::string> postfixOps;
 	bool hasReturned = false;
 	int declarationCounter = 0;
 	int currentParamIndex = 0;
 	std::vector<std::unordered_map<std::string, std::string>> scopeStack;
+	std::vector<std::pair<BasicBlock*, BasicBlock*>> loopStack;
 
 	std::string createScopedName(const std::string &name);
 	std::string resolveVisibleVar(const std::string &name) const;

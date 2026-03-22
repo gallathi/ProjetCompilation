@@ -18,11 +18,28 @@ block
 
 stmt 
     : declaration
+    | CONTINUE ';'
+    | BREAK ';'
     | return_stmt
-    | affectation_declaration
     | block
     | expression ';'
+    | conditional
+    | while_conditional
     ;
+
+conditional
+    : 'if' '(' expression ')' block else_stmt*
+    ;
+
+while_conditional
+    : 'while' '(' expression ')' block
+    ;
+
+else_stmt
+    : 'else' 'if' '(' expression ')' block    #else_if
+    | 'else' block                     #else
+    ;
+
 
 declaration : 'int' declaration_var ';' ;
 declaration_var : VAR ',' declaration_var | VAR ;
@@ -33,6 +50,10 @@ arg_list : expression (',' expression)* ;
 
 expression 	: '(' expression ')'                            #par
 			| NOT expression							    #not
+			| VAR PLUS PLUS									#post_incr
+			| VAR MINUS MINUS								#post_decr
+			| PLUS PLUS VAR									#pre_incr
+			| MINUS MINUS VAR                        		#pre_decr
            	| MINUS expression                              #opposite
            	| expression op=(MUL|DIV|MOD) expression        #muldiv
            	| expression op=(PLUS|MINUS) expression         #addsub
@@ -41,7 +62,7 @@ expression 	: '(' expression ')'                            #par
             | expression BITWISE_AND expression				#bitwise_and
             | expression BITWISE_XOR expression				#bitwise_xor
             | expression BITWISE_OR expression				#bitwise_or 
-           	| VAR '=' expression						    #affectation
+           	| VAR op=(AEQ|PEQ|MEQ) expression				#affectation
             | VAR '(' arg_list? ')'                         #call
             | PUTCHAR '(' expression ')'                    #putchar
             | GETCHAR '(' ')'                               #getchar
@@ -50,6 +71,7 @@ expression 	: '(' expression ')'                            #par
            	| VAR                                           #var
             ;
 
+decla_affect : VAR AEQ expression ;
 
 CHARCONST
     : '\'' ( ~['\\\r\n] | EscapeSequence )+ '\'' ;
@@ -60,13 +82,11 @@ fragment EscapeSequence
     | '\\' [0-7]+
     ;
 
-CONST : [0-9]+ ;
 COMMENT : '/*' .*? '*/' -> skip ;
 DIRECTIVE : '#' .*? '\n' -> skip ;
 WS    : [ \t\r\n] -> channel(HIDDEN);
 PUTCHAR : 'putchar';
 GETCHAR : 'getchar';
-VAR : [a-zA-Z][a-zA-Z0-9_]* ;
 PLUS : '+';
 MINUS : '-';
 MUL : '*';
@@ -82,3 +102,10 @@ NOT : '!';
 BITWISE_OR : '|';
 BITWISE_AND : '&';
 BITWISE_XOR : '^';
+AEQ : '=';
+PEQ : '+=';
+MEQ : '-=';
+CONTINUE : 'continue';
+BREAK : 'break';
+CONST : [0-9]+ ;
+VAR : [a-zA-Z][a-zA-Z0-9_]* ;

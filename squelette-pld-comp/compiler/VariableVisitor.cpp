@@ -611,3 +611,4 @@ std::any VariableVisitor::visitCall(ifccParser::CallContext *ctx)
     }
     return sig.returnType;
 }
+

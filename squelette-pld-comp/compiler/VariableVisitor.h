@@ -59,6 +59,13 @@ public:
 	virtual std::any visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx) override;
 	virtual std::any visitBitwise_or(ifccParser::Bitwise_orContext *ctx) override;
 	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
+	virtual std::any visitPre_incr(ifccParser::Pre_incrContext *ctx) override;
+	virtual std::any visitPre_decr(ifccParser::Pre_decrContext *ctx) override;
+	virtual std::any visitPost_incr(ifccParser::Post_incrContext *ctx) override;
+	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
+	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
+	virtual std::any visitWhile_conditional(ifccParser::While_conditionalContext *ctx) override;
+	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitCall(ifccParser::CallContext *ctx) override;
 
@@ -99,4 +106,6 @@ protected:
 	int errorCount = 0;
 	bool debug;
 	bool hasReturn = false;
+	int declarationCounter = 0;
+	int loopLevel = 0;
 };

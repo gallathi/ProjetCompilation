@@ -128,6 +128,12 @@ void BasicBlock::gen_asm(ostream &o)
     }
     if (exit_true != nullptr)
     {
+    	if (exit_false != nullptr)
+    	{
+    		o << "    movl " << cfg->IR_reg_to_asm(test_var_name) << ", %eax" << endl;
+        	o << "    testl %eax, %eax" << endl;
+        	o << "    jz " << exit_false->label << endl;
+        }
         o << "    jmp " << exit_true->label << endl;
     }
 }
@@ -319,5 +325,8 @@ void IRInstr::gen_asm(ostream &o)
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[0]) << ", %edi" << endl;
         o << "    call putchar@PLT" << endl;
         break;
+    case jump: // destination
+    	o << "    jmp " << params[0] << endl;
+    	break;
     }
 }
