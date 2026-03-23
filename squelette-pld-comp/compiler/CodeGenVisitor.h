@@ -53,6 +53,7 @@ public:
 	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
 	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
 	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
+	virtual std::any visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx) override;
 
 protected:
 	std::map<std::string, FunctionSemanticState> functionStates;
