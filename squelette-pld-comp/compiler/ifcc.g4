@@ -25,6 +25,7 @@ stmt
     | expression ';'
     | conditional
     | while_conditional
+    | switch_stmt
     ;
 
 conditional
@@ -46,7 +47,9 @@ declaration_var : (VAR|decla_affect) ',' declaration_var | (VAR|decla_affect) ;
 return_stmt : 'return' expression? ';' ;
 affectation_declaration: 'int' VAR '=' expression ';' ;
 arg_list : expression (',' expression)* ;
-
+switch_stmt : 'switch' '(' expression ')' '{' switch_case* switch_default? '}' ;
+switch_case : 'case' CONST ':' stmt* ;
+switch_default : 'default' ':' stmt* ;
 
 expression 	: '(' expression ')'                            #par
 			| NOT expression							    #not

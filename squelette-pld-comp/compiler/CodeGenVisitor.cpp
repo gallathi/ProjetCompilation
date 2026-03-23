@@ -245,6 +245,79 @@ antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *c
 	return 0;
 }
 
+antlrcpp::Any CodeGenVisitor::visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx)
+{
+    string switchVar = std::any_cast<string>(visit(ctx->expression()));
+    BasicBlock *endSwitchBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    cfg.add_bb(endSwitchBB);
+
+    // On peut avoir des break mais pas de continue
+    loopStack.push_back({nullptr, endSwitchBB});
+
+    auto cases = ctx->switch_case();
+    int casesNumber = cases.size();
+
+    // On crée les blocs de code
+    vector<BasicBlock*> codeBBs;
+    for (int i = 0; i < casesNumber; i++) {
+        codeBBs.push_back(new BasicBlock(&cfg, cfg.new_BB_name()));
+        cfg.add_bb(codeBBs[i]);
+    }
+    BasicBlock *defaultBB = nullptr;
+    if (ctx->switch_default()) {
+        defaultBB = new BasicBlock(&cfg, cfg.new_BB_name());
+        cfg.add_bb(defaultBB);
+    }
+
+    // On crée et relie les blocs de tests
+    BasicBlock *currentTestBB = cfg.current_bb;
+    for (int i = 0; i < casesNumber; i++)
+    {
+        BasicBlock *nextTestBB = new BasicBlock(&cfg, cfg.new_BB_name());
+        cfg.add_bb(nextTestBB);
+
+        cfg.current_bb = currentTestBB;
+
+        string caseVal = cases[i]->CONST()->getText();
+        string caseValLoc = cfg.create_new_tempvar(Type::INT);
+        cfg.add_to_symbol_table(caseValLoc, Type::INT);
+        cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {caseValLoc, caseVal});
+
+        string tmpVar = cfg.create_new_tempvar(Type::INT);
+        cfg.add_to_symbol_table(tmpVar, Type::INT);
+
+        currentTestBB->add_IRInstr(IRInstr::cmp_eq, Type::INT, {tmpVar, switchVar, caseValLoc});
+        currentTestBB->test_var_name = tmpVar;
+        currentTestBB->exit_true = codeBBs[i];
+        currentTestBB->exit_false = nextTestBB;
+
+        cfg.current_bb = codeBBs[i];
+        for (auto stmt : cases[i]->stmt()) { visit(stmt); }
+
+        if (cfg.current_bb->exit_true == nullptr) {
+            if (i + 1 < casesNumber) {
+                cfg.current_bb->exit_true = codeBBs[i+1];
+            } else {
+                cfg.current_bb->exit_true = (defaultBB) ? defaultBB : endSwitchBB;
+            }
+        }
+        currentTestBB = nextTestBB;
+    }
+
+    if (defaultBB) {
+        currentTestBB->exit_true = defaultBB;
+        cfg.current_bb = defaultBB;
+        for (auto stmt : ctx->switch_default()->stmt()) { visit(stmt); }
+        if (cfg.current_bb->exit_true == nullptr) { cfg.current_bb->exit_true = endSwitchBB; }
+    } else {
+        currentTestBB->exit_true = endSwitchBB;
+    }
+
+    cfg.current_bb = endSwitchBB;
+    loopStack.pop_back();
+    return 0;
+}
+
 antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_conditionalContext *ctx)
 {
 	BasicBlock *condBB = new BasicBlock(&cfg, cfg.new_BB_name());

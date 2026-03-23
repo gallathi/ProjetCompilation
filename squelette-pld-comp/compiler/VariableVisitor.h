@@ -68,6 +68,8 @@ public:
 	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitCall(ifccParser::CallContext *ctx) override;
+	virtual std::any visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx) override;
+	virtual std::any visitSwitch_case(ifccParser::Switch_caseContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();
@@ -108,4 +110,5 @@ protected:
 	bool hasReturn = false;
 	int declarationCounter = 0;
 	int loopLevel = 0;
+	int switchLevel = 0;
 };
