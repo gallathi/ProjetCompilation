@@ -4,6 +4,7 @@
 #include "generated/ifccBaseVisitor.h"
 #include "VariableVisitor.h"
 #include "IR.h"
+#include "type.h"
 
 #include <map>
 #include <string>
@@ -16,7 +17,10 @@ class CodeGenVisitor : public ifccBaseVisitor
 public:
 	CodeGenVisitor(const std::map<std::string, FunctionSemanticState> &functionStates,
 		const std::map<std::string, FunctionSignature> &functionSignatures)
-		: functionStates(functionStates), functionSignatures(functionSignatures) {}
+		: functionStates(functionStates), functionSignatures(functionSignatures) 
+	{
+		dconsts[".LC0"] = 0;
+	}
 	virtual ~CodeGenVisitor() {}
 	virtual std::any visitProg(ifccParser::ProgContext *ctx) override;
 	virtual std::any visitFunction_def(ifccParser::Function_defContext *ctx) override;
@@ -53,6 +57,7 @@ public:
 	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
 	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
 	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
+	virtual std::any visitDconst(ifccParser::DconstContext *ctx) override;
 
 protected:
 	std::map<std::string, FunctionSemanticState> functionStates;
@@ -70,4 +75,6 @@ protected:
 	std::string createScopedName(const std::string &name);
 	std::string resolveVisibleVar(const std::string &name) const;
 	void bindFunctionState(const std::string &name);
+	std::map<std::string, double> dconsts;
+	int nextDConstIndex = 1;
 };

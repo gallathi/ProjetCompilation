@@ -14,6 +14,7 @@ struct varInfo
 	int index;
 	bool used;
 	bool affected;
+	Type type;
 };
 
 struct FunctionSignature
@@ -26,7 +27,7 @@ struct FunctionSemanticState
 {
 	std::map<std::string, varInfo> varTable;
 	int nextIndex = 0;
-	int compteurVar = 0;
+	int compteurVar = 4;
 	int declarationCounter = 0;
 };
 
@@ -68,6 +69,8 @@ public:
 	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitCall(ifccParser::CallContext *ctx) override;
+	virtual std::any visitDeclaration(ifccParser::DeclarationContext *ctx) override;
+	virtual std::any visitDconst(ifccParser::DconstContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();
@@ -76,7 +79,7 @@ public:
 	const std::map<std::string, FunctionSignature> &getFunctionSignatures() const;
 	const std::map<std::string, FunctionSemanticState> &getFunctionStates() const;
 
-private:
+protected:
 	struct ScopedVarInfo
 	{
 		std::string name;
@@ -96,9 +99,8 @@ private:
 	Type parseTypeText(const std::string &text) const;
 	Type evalExpr(ifccParser::ExpressionContext *ctx);
 	std::string declareVar(const std::string &varName, bool affected);
-	void allocateTemporary();
+	void allocateTemporary(Type t);
 
-protected:
 	std::map<std::string, FunctionSignature> functionSignatures;
 	std::map<std::string, FunctionSemanticState> functionStates;
 	std::string currentFunction;
@@ -108,4 +110,5 @@ protected:
 	bool hasReturn = false;
 	int declarationCounter = 0;
 	int loopLevel = 0;
+	Type currentType;
 };

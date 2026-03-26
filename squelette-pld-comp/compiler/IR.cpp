@@ -13,6 +13,10 @@ string CFG::get_return_label() const
     return returnLabel;
 }
 
+void CFG::gen_asm_text_section_line(ostream &o) {
+	o << ".section .text" << endl;
+}
+
 void CFG::gen_asm_prologue(ostream &o, int compteurVar, bool emitGlobal)
 {
 #ifdef __APPLE__
@@ -26,7 +30,7 @@ void CFG::gen_asm_prologue(ostream &o, int compteurVar, bool emitGlobal)
     {
         o << ".globl " << functionName << "\n";
     }
-    o << " " << functionName << ": \n";
+    o << functionName << ": \n";
 #endif
 
     o << "    pushq %rbp\n";
@@ -57,6 +61,14 @@ void CFG::gen_asm(ostream &o)
     }
 }
 
+void CFG::gen_asm_data_section(ostream &o, map<string, double> dconsts) {
+	o << ".section .rodata" << endl;
+	for (auto &dconst : dconsts) {
+		o << dconst.first << ":" << endl;
+		o << "    .double " << dconst.second << endl;
+	}
+}
+
 string CFG::IR_reg_to_asm(string reg)
 {
     return "-" + to_string(SymbolIndex[reg]) + "(%rbp)";
@@ -66,7 +78,8 @@ void CFG::add_to_symbol_table(string name, Type t)
 {
     SymbolType[name] = t;
     SymbolIndex[name] = nextFreeSymbolIndex;
-    nextFreeSymbolIndex += 4;
+    TypeSizes typeSizes;
+    nextFreeSymbolIndex += typeSizes.getTypeSize(t);
 }
 
 string CFG::create_new_tempvar(Type t)
@@ -146,26 +159,55 @@ void IRInstr::gen_asm(ostream &o)
     switch (op)
     {
     case ldconst:
-        o << "    movl $" << params[1] << ", " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	if (t == Type::INT) {
+        	o << "    movl $" << params[1] << ", " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        } else {
+        	o << "    movsd " << params[1] << "(%rip), %xmm0" << endl;
+        	o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        }
         break;
     case copy:
-        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	if (t == Type::INT) {
+        	o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+        	o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        } else {
+        	o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
+        	o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+        }
         break;
     case add:
-        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-        o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	if (t == Type::INT) {
+		    o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+		    o << "    addl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+		    o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		} else {
+			o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
+		    o << "    addsd " << bb->cfg->IR_reg_to_asm(params[2]) << ", %xmm0" << endl;
+		    o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		}
         break;
     case sub:
-        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-        o << "    subl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	if (t == Type::INT) {
+		    o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+		    o << "    subl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+		    o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		} else {
+			o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
+		    o << "    subsd " << bb->cfg->IR_reg_to_asm(params[2]) << ", %xmm0" << endl;
+		    o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		}
         break;
     case neg:
-        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-        o << "    negl %eax" << endl;
-        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	if (t == Type::INT) {
+		    o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+		    o << "    negl %eax" << endl;
+		    o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		} else {
+			o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
+			o << "    movsd .LC0(%rip), %xmm1" << endl;
+		    o << "    subsd  %xmm1, %xmm0" << endl;
+		    o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		}
         break;
     case bool_not:
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
@@ -174,9 +216,15 @@ void IRInstr::gen_asm(ostream &o)
         o << "    mov %al, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
         break;
     case mul:
-        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-        o << "    imull " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
-        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	if (t == Type::INT) {
+		    o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+		    o << "    imull " << bb->cfg->IR_reg_to_asm(params[2]) << ", %eax" << endl;
+		    o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		} else {
+			o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
+		    o << "    mulsd " << bb->cfg->IR_reg_to_asm(params[2]) << ", %xmm0" << endl;
+		    o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		}
         break;
     case rmem:
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
@@ -285,11 +333,17 @@ void IRInstr::gen_asm(ostream &o)
         o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
         break;
     case div:
-        o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
-        o << "    cdq" << endl;
-        o << "    movl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %ecx" << endl;
-        o << "    idiv %ecx" << endl;
-        o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	if (t == Type::INT) {
+		    o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+		    o << "    cdq" << endl;
+		    o << "    movl " << bb->cfg->IR_reg_to_asm(params[2]) << ", %ecx" << endl;
+		    o << "    idiv %ecx" << endl;
+		    o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		} else {
+			o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
+		    o << "    divsd " << bb->cfg->IR_reg_to_asm(params[2]) << ", %xmm0" << endl;
+		    o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+		}
         break;
     case mod:
         o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
@@ -327,6 +381,16 @@ void IRInstr::gen_asm(ostream &o)
         break;
     case jump: // destination
     	o << "    jmp " << params[0] << endl;
+    	break;
+    case int_to_double: // destination / source
+    	o << "    movl " << bb->cfg->IR_reg_to_asm(params[1]) << ", %eax" << endl;
+    	o << "    cvtsi2sd %eax, %xmm0" << endl;
+    	o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
+    	break;
+   	case double_to_int: // destination / source
+    	o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
+    	o << "    cvttsd2si %xmm0, %eax" << endl;
+    	o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
     	break;
     }
 }

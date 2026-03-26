@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+TypeSizes typeSizes;
+
 void VariableVisitor::clearScopedVars()
 {
     while (!scopedVars.empty())
@@ -111,7 +113,13 @@ Type VariableVisitor::parseTypeText(const std::string &text) const
     if (text == "void")
     {
         return Type::VOID;
-    }
+    } else if (text == "char")
+    {
+    	return Type::CHAR;
+    } else if (text == "double")
+    {
+    	return Type::DOUBLE;
+    } 
     return Type::INT;
 }
 
@@ -134,10 +142,11 @@ std::string VariableVisitor::declareVar(const std::string &varName, bool affecte
 
     varInfo info;
     info.index = state.nextIndex;
-    state.nextIndex += 4;
-    state.compteurVar += 4;
+    state.nextIndex += typeSizes.getTypeSize(currentType);
+    state.compteurVar += typeSizes.getTypeSize(currentType);
     info.used = false;
     info.affected = affected;
+    info.type = currentType;
     state.varTable[symbolName] = info;
 
     scopedVars.push({varName, symbolName, scopeBlock});
@@ -150,13 +159,13 @@ std::string VariableVisitor::declareVar(const std::string &varName, bool affecte
     return symbolName;
 }
 
-void VariableVisitor::allocateTemporary()
+void VariableVisitor::allocateTemporary(Type t)
 {
     if (currentFunction.empty())
     {
         return;
     }
-    currentState().compteurVar += 4;
+    currentState().compteurVar += typeSizes.getTypeSize(t);
 }
 
 std::any VariableVisitor::visitProg(ifccParser::ProgContext *ctx)
@@ -323,6 +332,13 @@ std::any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
     return {};
 }
 
+std::any VariableVisitor::visitDeclaration(ifccParser::DeclarationContext *ctx)
+{
+    currentType = parseTypeText(ctx->type_decla()->getText());
+    visit(ctx->declaration_var());
+    return {};
+}
+
 std::any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
     if (ctx->decla_affect() != nullptr)
@@ -353,6 +369,11 @@ std::any VariableVisitor::visitAffectation_declaration(ifccParser::Affectation_d
     {
         currentState().varTable[symbol].affected = true;
     }
+    if (rhsType == Type::INT && currentState().varTable[symbol].type == Type::DOUBLE) {
+    	allocateTemporary(Type::DOUBLE);
+    } else if (rhsType == Type::DOUBLE && currentState().varTable[symbol].type == Type::INT) {
+    	allocateTemporary(Type::INT);
+    }
     return {};
 }
 
@@ -379,7 +400,12 @@ std::any VariableVisitor::visitAffectation(ifccParser::AffectationContext *ctx)
     {
         std::cout << "affectation de la variable " << var << " (" << symbol << ")" << std::endl;
     }
-    return Type::INT;
+    if (rhsType == Type::INT && currentState().varTable[symbol].type == Type::DOUBLE) {
+    	allocateTemporary(Type::DOUBLE);
+    } else if (rhsType == Type::DOUBLE && currentState().varTable[symbol].type == Type::INT) {
+    	allocateTemporary(Type::INT);
+    }
+    return rhsType;
 }
 antlrcpp::Any VariableVisitor::visitDecla_affect(ifccParser::Decla_affectContext *ctx)
 {
@@ -390,8 +416,7 @@ antlrcpp::Any VariableVisitor::visitDecla_affect(ifccParser::Decla_affectContext
 	if (symbolName.empty())
 	{
 		if (debug)
-			std::cout << "ERREUR : La variable " << var << " est utilisée avant déclaration." << std::endl;
-		errorCount++;
+			reportError("La variable " + symbolName + " est utilisée avant déclaration.");
 		return 0;
 	}
 
@@ -408,31 +433,43 @@ antlrcpp::Any VariableVisitor::visitDecla_affect(ifccParser::Decla_affectContext
 antlrcpp::Any VariableVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
 {
 	
-	visitChildren(ctx);
-    allocateTemporary();
-	return Type::INT;
+	Type t = currentState().varTable[resolveVisibleVarSymbol(ctx->VAR()->getText())].type;
+	if (t == Type::DOUBLE) {
+		allocateTemporary(t);
+	}
+    allocateTemporary(t);
+	return t;
 }
 
 antlrcpp::Any VariableVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
 {
 	
-	visitChildren(ctx);
-    allocateTemporary();
-	return Type::INT;
+	Type t = currentState().varTable[resolveVisibleVarSymbol(ctx->VAR()->getText())].type;
+	if (t == Type::DOUBLE) {
+		allocateTemporary(t);
+	}
+    allocateTemporary(t);
+	return t;
 }
 
 antlrcpp::Any VariableVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
 {
-	visitChildren(ctx);
-    allocateTemporary();
-	return Type::INT;
+	Type t = currentState().varTable[resolveVisibleVarSymbol(ctx->VAR()->getText())].type;
+	if (t == Type::DOUBLE) {
+		allocateTemporary(t);
+	}
+    allocateTemporary(t);
+	return t;
 }
 
 antlrcpp::Any VariableVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
 {
-	visitChildren(ctx);
-    allocateTemporary();
-	return Type::INT;
+	Type t = currentState().varTable[resolveVisibleVarSymbol(ctx->VAR()->getText())].type;
+	if (t == Type::DOUBLE) {
+		allocateTemporary(t);
+	}
+    allocateTemporary(t);
+	return t;
 }
 
 antlrcpp::Any VariableVisitor::visitWhile_conditional(ifccParser::While_conditionalContext *ctx)
@@ -447,8 +484,7 @@ antlrcpp::Any VariableVisitor::visitStmt(ifccParser::StmtContext *ctx)
 {
 	if (loopLevel == 0 && (ctx->CONTINUE() != nullptr || ctx->BREAK() != nullptr)) {
 		if (debug)
-			std::cout << "ERREUR : Une instruction réservée aux boucles est utilisée hors d'une boucle." << std::endl;
-		errorCount++;
+			reportError("ERREUR : Une instruction réservée aux boucles est utilisée hors d'une boucle.");
 	} else {
 		visitChildren(ctx);
 	}
@@ -475,7 +511,7 @@ std::any VariableVisitor::visitVar(ifccParser::VarContext *ctx)
     {
         std::cout << "utilisation de la variable " << var << " (" << symbol << ")" << std::endl;
     }
-    return Type::INT;
+    return currentState().varTable[symbol].type;
 }
 
 std::any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
@@ -503,16 +539,26 @@ std::any VariableVisitor::visitReturn_stmt(ifccParser::Return_stmtContext *ctx)
     {
         reportError("Impossible de retourner une expression de type void.");
     }
+    if (exprType == Type::DOUBLE) {
+    	allocateTemporary(Type::INT);
+    }
 
     hasReturn = true;
-    return Type::INT;
+    return exprType;
 }
 
 std::any VariableVisitor::visitConst(ifccParser::ConstContext *ctx)
 {
     (void)ctx;
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
+}
+
+std::any VariableVisitor::visitDconst(ifccParser::DconstContext *ctx)
+{
+    (void)ctx;
+    allocateTemporary(Type::DOUBLE);
+    return Type::DOUBLE;
 }
 
 std::any VariableVisitor::visitPar(ifccParser::ParContext *ctx)
@@ -523,7 +569,7 @@ std::any VariableVisitor::visitPar(ifccParser::ParContext *ctx)
 std::any VariableVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
 {
     (void)ctx;
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -532,10 +578,14 @@ std::any VariableVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
     Type t = evalExpr(ctx->expression());
     if (t == Type::VOID)
     {
-        reportError("L'operateur unaire - attend une expression entiere.");
+        reportError("L'operateur unaire - attend une expression non void.");
     }
-    allocateTemporary();
-    return Type::INT;
+    
+    if (t == Type::DOUBLE) {
+    	allocateTemporary(t);
+    }
+    allocateTemporary(t);
+    return t;
 }
 
 std::any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
@@ -544,10 +594,15 @@ std::any VariableVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
     Type rhs = evalExpr(ctx->expression(1));
     if (lhs == Type::VOID || rhs == Type::VOID)
     {
-        reportError("Les operations arithmetiques attendent des expressions entieres.");
+        reportError("Les operations arithmetiques attendent des expressions non voids.");
     }
-    allocateTemporary();
-    return Type::INT;
+    Type outType = lhs == Type::DOUBLE || rhs == Type::DOUBLE ? Type::DOUBLE : Type::INT;
+    
+    if (outType == Type::DOUBLE && (lhs == Type::INT || rhs == Type::INT)) {
+    	allocateTemporary(outType); // conversion
+    }
+    allocateTemporary(outType);
+    return outType;
 }
 
 std::any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
@@ -556,10 +611,18 @@ std::any VariableVisitor::visitMuldiv(ifccParser::MuldivContext *ctx)
     Type rhs = evalExpr(ctx->expression(1));
     if (lhs == Type::VOID || rhs == Type::VOID)
     {
-        reportError("Les operations arithmetiques attendent des expressions entieres.");
+        reportError("Les operations arithmetiques attendent des expressions non voids.");
+    } else if (ctx->op->getText() == "%" && !(lhs == Type::INT && rhs == Type::INT))
+    {
+    	reportError("L'operation modulo attend des expressions entieres");
     }
-    allocateTemporary();
-    return Type::INT;
+    Type outType = lhs == Type::DOUBLE || rhs == Type::DOUBLE ? Type::DOUBLE : Type::INT;
+    
+    if (outType == Type::DOUBLE && (lhs == Type::INT || rhs == Type::INT)) {
+    	allocateTemporary(outType); // conversion
+    }
+    allocateTemporary(outType);
+    return outType;
 }
 
 std::any VariableVisitor::visitEq(ifccParser::EqContext *ctx)
@@ -570,7 +633,7 @@ std::any VariableVisitor::visitEq(ifccParser::EqContext *ctx)
     {
         reportError("Les comparaisons attendent des expressions entieres.");
     }
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -582,7 +645,7 @@ std::any VariableVisitor::visitComp(ifccParser::CompContext *ctx)
     {
         reportError("Les comparaisons attendent des expressions entieres.");
     }
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -593,7 +656,7 @@ std::any VariableVisitor::visitNot(ifccParser::NotContext *ctx)
     {
         reportError("L'operateur ! attend une expression entiere.");
     }
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -605,7 +668,7 @@ std::any VariableVisitor::visitBitwise_and(ifccParser::Bitwise_andContext *ctx)
     {
         reportError("Les operations bit-a-bit attendent des expressions entieres.");
     }
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -617,7 +680,7 @@ std::any VariableVisitor::visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx)
     {
         reportError("Les operations bit-a-bit attendent des expressions entieres.");
     }
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -629,14 +692,14 @@ std::any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
     {
         reportError("Les operations bit-a-bit attendent des expressions entieres.");
     }
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
 std::any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
 {
     (void)ctx;
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -647,7 +710,7 @@ std::any VariableVisitor::visitPutchar(ifccParser::PutcharContext *ctx)
     {
         reportError("putchar attend un argument entier.");
     }
-    allocateTemporary();
+    allocateTemporary(Type::INT);
     return Type::INT;
 }
 
@@ -687,7 +750,7 @@ std::any VariableVisitor::visitCall(ifccParser::CallContext *ctx)
 
     if (sig.returnType != Type::VOID)
     {
-        allocateTemporary();
+        allocateTemporary(Type::INT);
     }
     return sig.returnType;
 }

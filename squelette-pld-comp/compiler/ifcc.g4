@@ -10,7 +10,9 @@ param_list : param (',' param)*;
 
 param : type VAR;
 
-type : 'int' | 'void';
+type : 'int' | 'char' | 'double' | 'void';
+
+type_decla : 'int' | 'char' | 'double';
 
 block
     : '{' stmt* '}'
@@ -41,10 +43,10 @@ else_stmt
     ;
 
 
-declaration : 'int' declaration_var ';' ;
+declaration : type_decla declaration_var ';' ;
 declaration_var : (VAR|decla_affect) ',' declaration_var | (VAR|decla_affect) ;
 return_stmt : 'return' expression? ';' ;
-affectation_declaration: 'int' VAR '=' expression ';' ;
+affectation_declaration: type_decla VAR '=' expression ';' ;
 arg_list : expression (',' expression)* ;
 
 
@@ -67,6 +69,7 @@ expression 	: '(' expression ')'                            #par
             | PUTCHAR '(' expression ')'                    #putchar
             | GETCHAR '(' ')'                               #getchar
            	| CONST                                         #const
+           	| DCONST										#dconst
             | CHARCONST                                     #charconst
            	| VAR                                           #var
             ;
@@ -108,4 +111,5 @@ MEQ : '-=';
 CONTINUE : 'continue';
 BREAK : 'break';
 CONST : [0-9]+ ;
+DCONST : (CONST '.'? | [0-9]* '.' [0-9]+);
 VAR : [a-zA-Z][a-zA-Z0-9_]* ;
