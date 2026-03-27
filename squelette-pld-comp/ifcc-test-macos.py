@@ -25,7 +25,7 @@ def run_command(string, logfile=None, toscreen=False):
     
     process=subprocess.Popen(string,shell=True,
                              stderr=subprocess.STDOUT,stdout=subprocess.PIPE,
-                             text=True,bufsize=0)
+                             text=True,errors='replace',bufsize=0)
     if logfile:
         logfile=open(logfile,'w')
     
@@ -42,7 +42,7 @@ def run_command(string, logfile=None, toscreen=False):
     return process.returncode
 
 def dumpfile(name,quiet=False):
-    data=open(name,"rb").read().decode('utf-8',errors='ignore')
+    data=open(name,"rb").read().decode('utf-8',errors='replace')
     if not quiet:
         print(data,end='')
     return data

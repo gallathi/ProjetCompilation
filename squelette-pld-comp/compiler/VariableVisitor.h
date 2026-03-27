@@ -58,6 +58,8 @@ public:
 	virtual std::any visitBitwise_and(ifccParser::Bitwise_andContext *ctx) override;
 	virtual std::any visitBitwise_xor(ifccParser::Bitwise_xorContext *ctx) override;
 	virtual std::any visitBitwise_or(ifccParser::Bitwise_orContext *ctx) override;
+	virtual std::any visitLogical_and(ifccParser::Logical_andContext *ctx) override;
+	virtual std::any visitLogical_or(ifccParser::Logical_orContext *ctx) override;
 	virtual std::any visitGetchar(ifccParser::GetcharContext *ctx) override;
 	virtual std::any visitPre_incr(ifccParser::Pre_incrContext *ctx) override;
 	virtual std::any visitPre_decr(ifccParser::Pre_decrContext *ctx) override;

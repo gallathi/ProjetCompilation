@@ -142,30 +142,21 @@ antlrcpp::Any CodeGenVisitor::visitBlockNoAutoGen(ifccParser::BlockContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
-    std::string sourceName;
-    if (ctx->decla_affect() != nullptr)
+    for (ifccParser::Declaration_itemContext *item : ctx->declaration_item())
     {
-        sourceName = ctx->decla_affect()->VAR()->getText();
-    }
-    else
-    {
-        sourceName = ctx->VAR()->getText();
-    }
+        std::string sourceName = item->VAR()->getText();
 
-    std::string scopedName = createScopedName(sourceName);
-    scopeStack.back()[sourceName] = scopedName;
+        std::string scopedName = createScopedName(sourceName);
+        scopeStack.back()[sourceName] = scopedName;
 
-    if (ctx->decla_affect() != nullptr)
-    {
-        visit(ctx->decla_affect());
+        if (item->expression() != nullptr)
+        {
+            string value = std::any_cast<string>(visit(item->expression()));
+            cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {scopedName, value});
+        }
     }
 
-    if (ctx->declaration_var() != nullptr)
-    {
-        visit(ctx->declaration_var());
-    }
-
-	    return antlrcpp::Any();
+    return antlrcpp::Any();
 }
 
 std::stack<BasicBlock *> endifStack;
@@ -528,6 +519,64 @@ antlrcpp::Any CodeGenVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx
     return out;
 }
 
+std::string CodeGenVisitor::emitShortCircuitLogical(ifccParser::ExpressionContext *lhsCtx, ifccParser::ExpressionContext *rhsCtx, bool isAnd)
+{
+    string out = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(out, Type::INT);
+
+    BasicBlock *lhsBB = cfg.current_bb;
+    string lhs = std::any_cast<string>(visit(lhsCtx));
+
+    BasicBlock *rhsBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    BasicBlock *trueBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    BasicBlock *falseBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    BasicBlock *endBB = new BasicBlock(&cfg, cfg.new_BB_name());
+
+    cfg.add_bb(rhsBB);
+    cfg.add_bb(trueBB);
+    cfg.add_bb(falseBB);
+    cfg.add_bb(endBB);
+
+    lhsBB->test_var_name = lhs;
+    if (isAnd)
+    {
+        lhsBB->exit_true = rhsBB;
+        lhsBB->exit_false = falseBB;
+    }
+    else
+    {
+        lhsBB->exit_true = trueBB;
+        lhsBB->exit_false = rhsBB;
+    }
+
+    cfg.current_bb = rhsBB;
+    string rhs = std::any_cast<string>(visit(rhsCtx));
+    rhsBB->test_var_name = rhs;
+    rhsBB->exit_true = trueBB;
+    rhsBB->exit_false = falseBB;
+
+    cfg.current_bb = trueBB;
+    trueBB->add_IRInstr(IRInstr::ldconst, Type::INT, {out, "1"});
+    trueBB->exit_true = endBB;
+
+    cfg.current_bb = falseBB;
+    falseBB->add_IRInstr(IRInstr::ldconst, Type::INT, {out, "0"});
+    falseBB->exit_true = endBB;
+
+    cfg.current_bb = endBB;
+    return out;
+}
+
+antlrcpp::Any CodeGenVisitor::visitLogical_and(ifccParser::Logical_andContext *ctx)
+{
+    return emitShortCircuitLogical(ctx->expression(0), ctx->expression(1), true);
+}
+
+antlrcpp::Any CodeGenVisitor::visitLogical_or(ifccParser::Logical_orContext *ctx)
+{
+    return emitShortCircuitLogical(ctx->expression(0), ctx->expression(1), false);
+}
+
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
 {
     char op = ctx->op->getText()[0];
@@ -672,8 +721,10 @@ antlrcpp::Any CodeGenVisitor::visitCharconst(ifccParser::CharconstContext *ctx)
 antlrcpp::Any CodeGenVisitor::visitPutchar(ifccParser::PutcharContext *ctx)
 {
     string arg = std::any_cast<string>(visit(ctx->expression()));
-    cfg.current_bb->add_IRInstr(IRInstr::putchar, Type::INT, {arg});
-    return antlrcpp::Any();
+    string out = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(out, Type::INT);
+    cfg.current_bb->add_IRInstr(IRInstr::call, Type::INT, {"putchar", out, arg});
+    return out;
 }
 
 antlrcpp::Any CodeGenVisitor::visitGetchar(ifccParser::GetcharContext *ctx)

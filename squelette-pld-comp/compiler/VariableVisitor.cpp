@@ -325,18 +325,21 @@ std::any VariableVisitor::visitBlock(ifccParser::BlockContext *ctx)
 
 std::any VariableVisitor::visitDeclaration_var(ifccParser::Declaration_varContext *ctx)
 {
-    if (ctx->decla_affect() != nullptr)
+    for (ifccParser::Declaration_itemContext *item : ctx->declaration_item())
     {
-        declareVar(ctx->decla_affect()->VAR()->getText(), false);
-        visit(ctx->decla_affect());
-    }
-    else
-    {
-        declareVar(ctx->VAR()->getText(), false);
-    }
-    if (ctx->declaration_var() != nullptr)
-    {
-        visit(ctx->declaration_var());
+        std::string symbol = declareVar(item->VAR()->getText(), false);
+        if (item->expression() != nullptr)
+        {
+            Type rhsType = evalExpr(item->expression());
+            if (rhsType == Type::VOID)
+            {
+                reportError("Initialisation invalide de " + item->VAR()->getText() + " avec une expression void.");
+            }
+            if (!symbol.empty())
+            {
+                currentState().varTable[symbol].affected = true;
+            }
+        }
     }
     return {};
 }
@@ -644,6 +647,30 @@ std::any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
     if (lhs == Type::VOID || rhs == Type::VOID)
     {
         reportError("Les operations bit-a-bit attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitLogical_and(ifccParser::Logical_andContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations logiques attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitLogical_or(ifccParser::Logical_orContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations logiques attendent des expressions entieres.");
     }
     allocateTemporary();
     return Type::INT;

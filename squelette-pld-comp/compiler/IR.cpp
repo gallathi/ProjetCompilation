@@ -217,7 +217,11 @@ void IRInstr::gen_asm(ostream &o)
             }
         }
 
+#ifdef __APPLE__
+        o << "    call _" << params[0] << endl;
+#else
         o << "    call " << params[0] << endl;
+#endif
 
         if (extraArgs > 0)
         {

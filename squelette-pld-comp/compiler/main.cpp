@@ -38,8 +38,6 @@ int main(int argn, const char **argv)
   ifccLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
-  tokens.fill();
-
   ifccParser parser(&tokens);
   tree::ParseTree *tree = parser.axiom();
 
@@ -51,7 +49,15 @@ int main(int argn, const char **argv)
 
   bool debug = false;
   VariableVisitor vv(debug);
-  vv.visit(tree);
+  try
+  {
+    vv.visit(tree);
+  }
+  catch (const std::exception &e)
+  {
+    cerr << "error: semantic analysis crashed: " << e.what() << endl;
+    exit(1);
+  }
 
   if (debug)
     cout << endl
@@ -64,7 +70,15 @@ int main(int argn, const char **argv)
     exit(1);
   }
   CodeGenVisitor v(vv.getFunctionStates(), vv.getFunctionSignatures());
-  v.visit(tree);
+  try
+  {
+    v.visit(tree);
+  }
+  catch (const std::exception &e)
+  {
+    cerr << "error: code generation crashed: " << e.what() << endl;
+    exit(1);
+  }
 
   return 0;
 }
