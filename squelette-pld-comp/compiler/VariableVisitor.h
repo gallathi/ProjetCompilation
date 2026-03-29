@@ -25,8 +25,8 @@ struct FunctionSignature
 struct FunctionSemanticState
 {
 	std::map<std::string, varInfo> varTable;
-	int nextIndex = 0;
-	int compteurVar = 0;
+	int nextIndex = 4;
+	int compteurVar = 4;
 	int declarationCounter = 0;
 };
 

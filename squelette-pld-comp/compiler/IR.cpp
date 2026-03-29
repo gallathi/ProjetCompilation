@@ -26,7 +26,7 @@ void CFG::gen_asm_prologue(ostream &o, int compteurVar, bool emitGlobal)
     {
         o << ".globl " << functionName << "\n";
     }
-    o << " " << functionName << ": \n";
+    o << functionName << ": \n";
 #endif
 
     o << "    pushq %rbp\n";
