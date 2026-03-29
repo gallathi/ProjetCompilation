@@ -51,7 +51,8 @@ public:
 		return_instr,
 		getchar,
 		putchar,
-		jump
+		jump,
+		pointeurAffect
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
