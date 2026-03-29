@@ -649,6 +649,30 @@ std::any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
     return Type::INT;
 }
 
+std::any VariableVisitor::visitLogical_and(ifccParser::Logical_andContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations logiques attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitLogical_or(ifccParser::Logical_orContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations logiques attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
 std::any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
 {
     (void)ctx;

@@ -1,12 +1,11 @@
 #include "CodeGenVisitor.h"
 
-#include "IR.h"
 #include "type.h"
 #include <stack>
 
 using namespace std;
 
-CFG cfg;
+
 bool debug_cfg = false;
 
 string cond = "a";
@@ -526,6 +525,72 @@ antlrcpp::Any CodeGenVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx
     cfg.add_to_symbol_table(out, Type::INT);
     cfg.current_bb->add_IRInstr(IRInstr::bitwise_or, Type::INT, {out, lhs, rhs});
     return out;
+}
+
+antlrcpp::Any CodeGenVisitor::visitLogical_and(ifccParser::Logical_andContext *ctx)
+{
+    BasicBlock *secondMemberBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    BasicBlock *endBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    
+    cfg.add_bb(secondMemberBB);
+    cfg.add_bb(endBB);
+    
+    string result = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(result, Type::INT);
+    
+    string firstMember = std::any_cast<string>(visit(ctx->expression(0)));
+    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, firstMember});
+    
+    string zero = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(zero, Type::INT);
+    string secondTest = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(secondTest, Type::INT);
+    cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
+    cfg.current_bb->add_IRInstr(IRInstr::cmp_neq, Type::INT, {secondTest, zero, result});
+    cfg.current_bb->test_var_name = secondTest;
+    cfg.current_bb->exit_true = secondMemberBB;
+    cfg.current_bb->exit_false = endBB;
+    
+    cfg.current_bb = secondMemberBB;
+    string secondMember = std::any_cast<string>(visit(ctx->expression(1)));
+    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, secondMember});
+    cfg.current_bb->exit_true = endBB;
+    
+    cfg.current_bb = endBB;
+    return result;
+}
+
+antlrcpp::Any CodeGenVisitor::visitLogical_or(ifccParser::Logical_orContext *ctx)
+{
+    BasicBlock *secondMemberBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    BasicBlock *endBB = new BasicBlock(&cfg, cfg.new_BB_name());
+    
+    cfg.add_bb(secondMemberBB);
+    cfg.add_bb(endBB);
+    
+    string result = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(result, Type::INT);
+    
+    string firstMember = std::any_cast<string>(visit(ctx->expression(0)));
+    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, firstMember});
+    
+    string zero = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(zero, Type::INT);
+    string secondTest = cfg.create_new_tempvar(Type::INT);
+    cfg.add_to_symbol_table(secondTest, Type::INT);
+    cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
+    cfg.current_bb->add_IRInstr(IRInstr::cmp_eq, Type::INT, {secondTest, zero, result});
+    cfg.current_bb->test_var_name = secondTest;
+    cfg.current_bb->exit_true = secondMemberBB;
+    cfg.current_bb->exit_false = endBB;
+    
+    cfg.current_bb = secondMemberBB;
+    string secondMember = std::any_cast<string>(visit(ctx->expression(1)));
+    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, secondMember});
+    cfg.current_bb->exit_true = endBB;
+    
+    cfg.current_bb = endBB;
+    return result;
 }
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)

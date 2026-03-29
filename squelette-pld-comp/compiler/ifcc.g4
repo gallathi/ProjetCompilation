@@ -64,7 +64,9 @@ expression 	: '(' expression ')'                            #par
             | expression op=(EQ|NEQ) expression          	#eq
             | expression BITWISE_AND expression				#bitwise_and
             | expression BITWISE_XOR expression				#bitwise_xor
-            | expression BITWISE_OR expression				#bitwise_or 
+            | expression BITWISE_OR expression				#bitwise_or
+            | expression LOGICAL_AND expression				#logical_and
+            | expression LOGICAL_OR expression				#logical_or
            	| VAR op=(AEQ|PEQ|MEQ) expression				#affectation
             | VAR '(' arg_list? ')'                         #call
             | PUTCHAR '(' expression ')'                    #putchar
@@ -105,6 +107,8 @@ NOT : '!';
 BITWISE_OR : '|';
 BITWISE_AND : '&';
 BITWISE_XOR : '^';
+LOGICAL_AND : '&&';
+LOGICAL_OR : '||';
 AEQ : '=';
 PEQ : '+=';
 MEQ : '-=';
