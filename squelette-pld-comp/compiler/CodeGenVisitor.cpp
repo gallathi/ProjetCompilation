@@ -184,7 +184,7 @@ antlrcpp::Any CodeGenVisitor::visitElse_if(ifccParser::Else_ifContext *ctx)
 	condBB->exit_true = elseBB;
 	condBB->exit_false = endifStack.top(); // condBB pointe par default vers le endif, peut être changé par un autre passage dans cette fonction ou la fonction else
 
-	cfg.current_bb->exit_false = condBB; // on sait que le current_bb c'est soit le parentBB soit le condBB précedent
+	cfg.current_bb->exit_false = condBB; // on sait que le current_bb c'est soit le parentBB soit le condBB précedent(là ou la ligne juste en haut est changée)
 
 	cfg.add_bb(elseBB);
 	cfg.add_bb(condBB);
@@ -193,7 +193,7 @@ antlrcpp::Any CodeGenVisitor::visitElse_if(ifccParser::Else_ifContext *ctx)
 	visitBlockNoAutoGen(ctx->block());			  // on explore tout ce qu'il y as dans le block de code du else if
 	cfg.current_bb->exit_true = endifStack.top(); // le dernier block pointe vers le top du endifStack
 
-	cfg.current_bb = condBB;
+	cfg.current_bb = condBB; // on met comme current block le condBB pour changer son exit false au passage suivant
 
 	return 0;
 }
@@ -260,7 +260,7 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 	newLoop.second = nextBlock;
 	loopStack.push_back(newLoop);
 
-	cfg.current_bb->exit_true = condBB;
+	cfg.current_bb->exit_true = condBB; // jump inconditionel du bloc parent vers le condBB
 
 	cfg.current_bb = condBB;
 	string condVar = std::any_cast<string>(visit(ctx->expression()));
@@ -270,9 +270,9 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 	cfg.current_bb->exit_false = nextBlock;
 
 	cfg.current_bb = bodyBB;
-	visitBlockNoAutoGen(ctx->block());
+	visitBlockNoAutoGen(ctx->block()); // visiter le bloc dans code dans le body
 
-	cfg.current_bb->exit_true = condBB;
+	cfg.current_bb->exit_true = condBB; // le dernier block su code de body pointe vers le condBB
 	cfg.current_bb = nextBlock;
 
 	loopStack.pop_back();
