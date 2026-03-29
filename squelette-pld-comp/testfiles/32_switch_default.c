@@ -1,7 +1,7 @@
 int main()
 {
-    int a=15;
-    switch (1)
+    int a=0;
+    switch (15)
     {
         case 0:
             a+=1;
