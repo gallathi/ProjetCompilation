@@ -5,7 +5,6 @@
 
 using namespace std;
 
-
 bool debug_cfg = false;
 
 string cond = "a";
@@ -53,10 +52,6 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 	for (ifccParser::Function_defContext *fn : ctx->function_def())
 	{
 		visit(fn);
-	}
-	if (debug_cfg)
-	{
-		cout << cfg;
 	}
 	return antlrcpp::Any();
 }
@@ -247,75 +242,93 @@ antlrcpp::Any CodeGenVisitor::visitConditional(ifccParser::ConditionalContext *c
 
 antlrcpp::Any CodeGenVisitor::visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx)
 {
-    string switchVar = std::any_cast<string>(visit(ctx->expression()));
-    BasicBlock *endSwitchBB = new BasicBlock(&cfg, cfg.new_BB_name());
-    cfg.add_bb(endSwitchBB);
+	string switchVar = std::any_cast<string>(visit(ctx->expression()));
+	BasicBlock *endSwitchBB = new BasicBlock(&cfg, cfg.new_BB_name());
+	cfg.add_bb(endSwitchBB);
 
-    // On peut avoir des break mais pas de continue
-    loopStack.push_back({nullptr, endSwitchBB});
+	// On peut avoir des break mais pas de continue
+	loopStack.push_back({nullptr, endSwitchBB});
 
-    auto cases = ctx->switch_case();
-    int casesNumber = cases.size();
+	auto cases = ctx->switch_case();
+	int casesNumber = cases.size();
 
-    // On crée les blocs de code
-    vector<BasicBlock*> codeBBs;
-    for (int i = 0; i < casesNumber; i++) {
-        codeBBs.push_back(new BasicBlock(&cfg, cfg.new_BB_name()));
-        cfg.add_bb(codeBBs[i]);
-    }
-    BasicBlock *defaultBB = nullptr;
-    if (ctx->switch_default()) {
-        defaultBB = new BasicBlock(&cfg, cfg.new_BB_name());
-        cfg.add_bb(defaultBB);
-    }
+	// On crée les blocs de code
+	vector<BasicBlock *> codeBBs;
+	for (int i = 0; i < casesNumber; i++)
+	{
+		codeBBs.push_back(new BasicBlock(&cfg, cfg.new_BB_name()));
+		cfg.add_bb(codeBBs[i]);
+	}
+	BasicBlock *defaultBB = nullptr;
+	if (ctx->switch_default())
+	{
+		defaultBB = new BasicBlock(&cfg, cfg.new_BB_name());
+		cfg.add_bb(defaultBB);
+	}
 
-    // On crée et relie les blocs de tests
-    BasicBlock *currentTestBB = cfg.current_bb;
-    for (int i = 0; i < casesNumber; i++)
-    {
-        BasicBlock *nextTestBB = new BasicBlock(&cfg, cfg.new_BB_name());
-        cfg.add_bb(nextTestBB);
+	// On crée et relie les blocs de tests
+	BasicBlock *currentTestBB = cfg.current_bb;
+	for (int i = 0; i < casesNumber; i++)
+	{
+		BasicBlock *nextTestBB = new BasicBlock(&cfg, cfg.new_BB_name());
+		cfg.add_bb(nextTestBB);
 
-        cfg.current_bb = currentTestBB;
+		cfg.current_bb = currentTestBB;
 
-        string caseVal = cases[i]->CONST()->getText();
-        string caseValLoc = cfg.create_new_tempvar(Type::INT);
-        cfg.add_to_symbol_table(caseValLoc, Type::INT);
-        cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {caseValLoc, caseVal});
+		string caseVal = cases[i]->CONST()->getText();
+		string caseValLoc = cfg.create_new_tempvar(Type::INT);
+		cfg.add_to_symbol_table(caseValLoc, Type::INT);
+		cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {caseValLoc, caseVal});
 
-        string tmpVar = cfg.create_new_tempvar(Type::INT);
-        cfg.add_to_symbol_table(tmpVar, Type::INT);
+		string tmpVar = cfg.create_new_tempvar(Type::INT);
+		cfg.add_to_symbol_table(tmpVar, Type::INT);
 
-        currentTestBB->add_IRInstr(IRInstr::cmp_eq, Type::INT, {tmpVar, switchVar, caseValLoc});
-        currentTestBB->test_var_name = tmpVar;
-        currentTestBB->exit_true = codeBBs[i];
-        currentTestBB->exit_false = nextTestBB;
+		currentTestBB->add_IRInstr(IRInstr::cmp_eq, Type::INT, {tmpVar, switchVar, caseValLoc});
+		currentTestBB->test_var_name = tmpVar;
+		currentTestBB->exit_true = codeBBs[i];
+		currentTestBB->exit_false = nextTestBB;
 
-        cfg.current_bb = codeBBs[i];
-        for (auto stmt : cases[i]->stmt()) { visit(stmt); }
+		cfg.current_bb = codeBBs[i];
+		for (auto stmt : cases[i]->stmt())
+		{
+			visit(stmt);
+		}
 
-        if (cfg.current_bb->exit_true == nullptr) {
-            if (i + 1 < casesNumber) {
-                cfg.current_bb->exit_true = codeBBs[i+1];
-            } else {
-                cfg.current_bb->exit_true = (defaultBB) ? defaultBB : endSwitchBB;
-            }
-        }
-        currentTestBB = nextTestBB;
-    }
+		if (cfg.current_bb->exit_true == nullptr)
+		{
+			if (i + 1 < casesNumber)
+			{
+				cfg.current_bb->exit_true = codeBBs[i + 1];
+			}
+			else
+			{
+				cfg.current_bb->exit_true = (defaultBB) ? defaultBB : endSwitchBB;
+			}
+		}
+		currentTestBB = nextTestBB;
+	}
 
-    if (defaultBB) {
-        currentTestBB->exit_true = defaultBB;
-        cfg.current_bb = defaultBB;
-        for (auto stmt : ctx->switch_default()->stmt()) { visit(stmt); }
-        if (cfg.current_bb->exit_true == nullptr) { cfg.current_bb->exit_true = endSwitchBB; }
-    } else {
-        currentTestBB->exit_true = endSwitchBB;
-    }
+	if (defaultBB)
+	{
+		currentTestBB->exit_true = defaultBB;
+		cfg.current_bb = defaultBB;
+		for (auto stmt : ctx->switch_default()->stmt())
+		{
+			visit(stmt);
+		}
+		if (cfg.current_bb->exit_true == nullptr)
+		{
+			cfg.current_bb->exit_true = endSwitchBB;
+		}
+	}
+	else
+	{
+		currentTestBB->exit_true = endSwitchBB;
+	}
 
-    cfg.current_bb = endSwitchBB;
-    loopStack.pop_back();
-    return 0;
+	cfg.current_bb = endSwitchBB;
+	loopStack.pop_back();
+	return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_conditionalContext *ctx)
@@ -332,7 +345,7 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 	newLoop.second = nextBlock;
 	loopStack.push_back(newLoop);
 
-	cfg.current_bb->exit_true = condBB; // jump inconditionel du bloc parent vers le condBB
+	cfg.current_bb->exit_true = condBB;
 
 	cfg.current_bb = condBB;
 	string condVar = std::any_cast<string>(visit(ctx->expression()));
@@ -342,9 +355,9 @@ antlrcpp::Any CodeGenVisitor::visitWhile_conditional(ifccParser::While_condition
 	cfg.current_bb->exit_false = nextBlock;
 
 	cfg.current_bb = bodyBB;
-	visitBlockNoAutoGen(ctx->block()); // visiter le bloc dans code dans le body
+	visitBlockNoAutoGen(ctx->block());
 
-	cfg.current_bb->exit_true = condBB; // le dernier block su code de body pointe vers le condBB
+	cfg.current_bb->exit_true = condBB;
 	cfg.current_bb = nextBlock;
 
 	loopStack.pop_back();
@@ -528,68 +541,68 @@ antlrcpp::Any CodeGenVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx
 
 antlrcpp::Any CodeGenVisitor::visitLogical_and(ifccParser::Logical_andContext *ctx)
 {
-    BasicBlock *secondMemberBB = new BasicBlock(&cfg, cfg.new_BB_name());
-    BasicBlock *endBB = new BasicBlock(&cfg, cfg.new_BB_name());
-    
-    cfg.add_bb(secondMemberBB);
-    cfg.add_bb(endBB);
-    
-    string result = cfg.create_new_tempvar(Type::INT);
-    cfg.add_to_symbol_table(result, Type::INT);
-    
-    string firstMember = std::any_cast<string>(visit(ctx->expression(0)));
-    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, firstMember});
-    
-    string zero = cfg.create_new_tempvar(Type::INT);
-    cfg.add_to_symbol_table(zero, Type::INT);
-    string secondTest = cfg.create_new_tempvar(Type::INT);
-    cfg.add_to_symbol_table(secondTest, Type::INT);
-    cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
-    cfg.current_bb->add_IRInstr(IRInstr::cmp_neq, Type::INT, {secondTest, zero, result});
-    cfg.current_bb->test_var_name = secondTest;
-    cfg.current_bb->exit_true = secondMemberBB;
-    cfg.current_bb->exit_false = endBB;
-    
-    cfg.current_bb = secondMemberBB;
-    string secondMember = std::any_cast<string>(visit(ctx->expression(1)));
-    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, secondMember});
-    cfg.current_bb->exit_true = endBB;
-    
-    cfg.current_bb = endBB;
-    return result;
+	BasicBlock *secondMemberBB = new BasicBlock(&cfg, cfg.new_BB_name());
+	BasicBlock *endBB = new BasicBlock(&cfg, cfg.new_BB_name());
+
+	cfg.add_bb(secondMemberBB);
+	cfg.add_bb(endBB);
+
+	string result = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(result, Type::INT);
+
+	string firstMember = std::any_cast<string>(visit(ctx->expression(0)));
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, firstMember});
+
+	string zero = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(zero, Type::INT);
+	string secondTest = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(secondTest, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
+	cfg.current_bb->add_IRInstr(IRInstr::cmp_neq, Type::INT, {secondTest, zero, result});
+	cfg.current_bb->test_var_name = secondTest;
+	cfg.current_bb->exit_true = secondMemberBB;
+	cfg.current_bb->exit_false = endBB;
+
+	cfg.current_bb = secondMemberBB;
+	string secondMember = std::any_cast<string>(visit(ctx->expression(1)));
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, secondMember});
+	cfg.current_bb->exit_true = endBB;
+
+	cfg.current_bb = endBB;
+	return result;
 }
 
 antlrcpp::Any CodeGenVisitor::visitLogical_or(ifccParser::Logical_orContext *ctx)
 {
-    BasicBlock *secondMemberBB = new BasicBlock(&cfg, cfg.new_BB_name());
-    BasicBlock *endBB = new BasicBlock(&cfg, cfg.new_BB_name());
-    
-    cfg.add_bb(secondMemberBB);
-    cfg.add_bb(endBB);
-    
-    string result = cfg.create_new_tempvar(Type::INT);
-    cfg.add_to_symbol_table(result, Type::INT);
-    
-    string firstMember = std::any_cast<string>(visit(ctx->expression(0)));
-    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, firstMember});
-    
-    string zero = cfg.create_new_tempvar(Type::INT);
-    cfg.add_to_symbol_table(zero, Type::INT);
-    string secondTest = cfg.create_new_tempvar(Type::INT);
-    cfg.add_to_symbol_table(secondTest, Type::INT);
-    cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
-    cfg.current_bb->add_IRInstr(IRInstr::cmp_eq, Type::INT, {secondTest, zero, result});
-    cfg.current_bb->test_var_name = secondTest;
-    cfg.current_bb->exit_true = secondMemberBB;
-    cfg.current_bb->exit_false = endBB;
-    
-    cfg.current_bb = secondMemberBB;
-    string secondMember = std::any_cast<string>(visit(ctx->expression(1)));
-    cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, secondMember});
-    cfg.current_bb->exit_true = endBB;
-    
-    cfg.current_bb = endBB;
-    return result;
+	BasicBlock *secondMemberBB = new BasicBlock(&cfg, cfg.new_BB_name());
+	BasicBlock *endBB = new BasicBlock(&cfg, cfg.new_BB_name());
+
+	cfg.add_bb(secondMemberBB);
+	cfg.add_bb(endBB);
+
+	string result = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(result, Type::INT);
+
+	string firstMember = std::any_cast<string>(visit(ctx->expression(0)));
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, firstMember});
+
+	string zero = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(zero, Type::INT);
+	string secondTest = cfg.create_new_tempvar(Type::INT);
+	cfg.add_to_symbol_table(secondTest, Type::INT);
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {zero, "0"});
+	cfg.current_bb->add_IRInstr(IRInstr::cmp_eq, Type::INT, {secondTest, zero, result});
+	cfg.current_bb->test_var_name = secondTest;
+	cfg.current_bb->exit_true = secondMemberBB;
+	cfg.current_bb->exit_false = endBB;
+
+	cfg.current_bb = secondMemberBB;
+	string secondMember = std::any_cast<string>(visit(ctx->expression(1)));
+	cfg.current_bb->add_IRInstr(IRInstr::copy, Type::INT, {result, secondMember});
+	cfg.current_bb->exit_true = endBB;
+
+	cfg.current_bb = endBB;
+	return result;
 }
 
 antlrcpp::Any CodeGenVisitor::visitAddsub(ifccParser::AddsubContext *ctx)
