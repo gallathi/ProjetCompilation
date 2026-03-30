@@ -423,7 +423,7 @@ antlrcpp::Any CodeGenVisitor::visitPost_incr(ifccParser::Post_incrContext *ctx)
 {
 	std::string varSource = ctx->VAR()->getText();
 	std::string varName = resolveVisibleVar(varSource);
-	postfixOps[varName] = "++";
+	postfixOps.push_back({varName, "++"});
 
 	return varName;
 }
@@ -432,9 +432,8 @@ antlrcpp::Any CodeGenVisitor::visitPost_decr(ifccParser::Post_decrContext *ctx)
 {
 	std::string varSource = ctx->VAR()->getText();
 	std::string varName = resolveVisibleVar(varSource);
-	postfixOps[varName] = "--";
+	postfixOps.push_back({varName, "--"});
 
-	return varName;
     return varName;
 }
 
@@ -785,20 +784,21 @@ antlrcpp::Any CodeGenVisitor::visitStmt(ifccParser::StmtContext *ctx)
 	}
 	visitChildren(ctx);
 	for (auto &op : postfixOps)
-	{
-		string tempVar = cfg.create_new_tempvar(Type::INT);
-		cfg.add_to_symbol_table(tempVar, Type::INT);
+    {
+        string tempVar = cfg.create_new_tempvar(Type::INT);
+        cfg.add_to_symbol_table(tempVar, Type::INT);
 
-		cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
-		if (op.second == "++")
-		{
-			cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {op.first, op.first, tempVar});
-		}
-		else if (op.second == "--")
-		{
-			cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {op.first, op.first, tempVar});
-		}
-	}
+        cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
+
+        if (op.second == "++")
+        {
+            cfg.current_bb->add_IRInstr(IRInstr::add, Type::INT, {op.first, op.first, tempVar});
+        }
+        else if (op.second == "--")
+        {
+            cfg.current_bb->add_IRInstr(IRInstr::sub, Type::INT, {op.first, op.first, tempVar});
+        }
+    }
 	postfixOps.clear();
 	return antlrcpp::Any();
 }

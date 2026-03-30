@@ -63,7 +63,7 @@ protected:
 	std::string currentFunction;
 	std::map<std::string, varInfo> currentVarTable;
 	int currentFrameBytes = 0;
-	std::map<std::string, std::string> postfixOps;
+	std::vector<std::pair<std::string, std::string>> postfixOps;
 	bool hasReturned = false;
 	int declarationCounter = 0;
 	int currentParamIndex = 0;
