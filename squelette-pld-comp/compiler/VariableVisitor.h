@@ -25,8 +25,8 @@ struct FunctionSignature
 struct FunctionSemanticState
 {
 	std::map<std::string, varInfo> varTable;
-	int nextIndex = 0;
-	int compteurVar = 0;
+	int nextIndex = 4;
+	int compteurVar = 4;
 	int declarationCounter = 0;
 };
 
@@ -68,6 +68,10 @@ public:
 	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
 	virtual std::any visitPutchar(ifccParser::PutcharContext *ctx) override;
 	virtual std::any visitCall(ifccParser::CallContext *ctx) override;
+	virtual std::any visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx) override;
+	virtual std::any visitSwitch_case(ifccParser::Switch_caseContext *ctx) override;
+	virtual std::any visitLogical_and(ifccParser::Logical_andContext *ctx) override;
+	virtual std::any visitLogical_or(ifccParser::Logical_orContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();
@@ -108,4 +112,5 @@ protected:
 	bool hasReturn = false;
 	int declarationCounter = 0;
 	int loopLevel = 0;
+	int switchLevel = 0;
 };

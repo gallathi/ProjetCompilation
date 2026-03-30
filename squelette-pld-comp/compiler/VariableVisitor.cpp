@@ -443,11 +443,27 @@ antlrcpp::Any VariableVisitor::visitWhile_conditional(ifccParser::While_conditio
 	return 0;
 }
 
+std::any VariableVisitor::visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx)
+{
+    switchLevel++;
+    visitChildren(ctx);
+    switchLevel--;
+    return 0;
+}
+
+antlrcpp::Any VariableVisitor::visitSwitch_case(ifccParser::Switch_caseContext *ctx)
+{
+    allocateTemporary();
+    allocateTemporary();
+	visitChildren(ctx);
+	return 0;
+}
+
 antlrcpp::Any VariableVisitor::visitStmt(ifccParser::StmtContext *ctx)
 {
-	if (loopLevel == 0 && (ctx->CONTINUE() != nullptr || ctx->BREAK() != nullptr)) {
+	if ((loopLevel == 0 && ctx->CONTINUE() != nullptr) || (loopLevel == 0 && ctx->BREAK() != nullptr && switchLevel == 0)) {
 		if (debug)
-			std::cout << "ERREUR : Une instruction réservée aux boucles est utilisée hors d'une boucle." << std::endl;
+			std::cout << "ERREUR : Une instruction réservée aux boucles et switch est utilisée hors d'une boucle ou switch." << std::endl;
 		errorCount++;
 	} else {
 		visitChildren(ctx);
@@ -633,6 +649,30 @@ std::any VariableVisitor::visitBitwise_or(ifccParser::Bitwise_orContext *ctx)
     return Type::INT;
 }
 
+std::any VariableVisitor::visitLogical_and(ifccParser::Logical_andContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations logiques attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
+std::any VariableVisitor::visitLogical_or(ifccParser::Logical_orContext *ctx)
+{
+    Type lhs = evalExpr(ctx->expression(0));
+    Type rhs = evalExpr(ctx->expression(1));
+    if (lhs == Type::VOID || rhs == Type::VOID)
+    {
+        reportError("Les operations logiques attendent des expressions entieres.");
+    }
+    allocateTemporary();
+    return Type::INT;
+}
+
 std::any VariableVisitor::visitGetchar(ifccParser::GetcharContext *ctx)
 {
     (void)ctx;
@@ -691,4 +731,3 @@ std::any VariableVisitor::visitCall(ifccParser::CallContext *ctx)
     }
     return sig.returnType;
 }
-

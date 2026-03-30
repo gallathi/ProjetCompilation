@@ -53,6 +53,9 @@ public:
 	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
 	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
 	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
+	virtual std::any visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx) override;
+	virtual std::any visitLogical_and(ifccParser::Logical_andContext *ctx) override;
+	virtual std::any visitLogical_or(ifccParser::Logical_orContext *ctx) override;
 
 protected:
 	std::map<std::string, FunctionSemanticState> functionStates;
@@ -70,4 +73,6 @@ protected:
 	std::string createScopedName(const std::string &name);
 	std::string resolveVisibleVar(const std::string &name) const;
 	void bindFunctionState(const std::string &name);
+	
+	CFG cfg;
 };

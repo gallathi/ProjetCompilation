@@ -66,8 +66,8 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [x] `break` et `continue`.
 * [ ] Les chaînes de caractères représentées par des tableaux de `char`.
 * [x] Possibilité d'initialiser une variable lors de sa déclaration.
-* [ ] `switch...case`.
-* [ ] Les opérateurs logiques paresseux `||`, `&&`.
+* [x] `switch...case`.
+* [x] Les opérateurs logiques paresseux `||`, `&&`.
 * [x] Opérateurs d'affectation (`+=`, `-=`) et d'incrémentation/décrémentation (`++`, `--`).
 
 ### 📉 Non Prioritaire (Low Priority) 

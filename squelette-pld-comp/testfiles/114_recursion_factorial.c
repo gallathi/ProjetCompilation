@@ -1,13 +1,13 @@
 int factorial(int n)
 {
-    if (n)
+    if (n > 1)
     {
-        return n;
+        return n*factorial(n-1);
     }
     return 1;
 }
 
 int main()
 {
-    return factorial(42);
+    return factorial(5);
 }

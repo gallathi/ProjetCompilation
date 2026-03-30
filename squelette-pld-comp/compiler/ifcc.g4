@@ -25,6 +25,7 @@ stmt
     | expression ';'
     | conditional
     | while_conditional
+    | switch_stmt
     ;
 
 conditional
@@ -46,7 +47,9 @@ declaration_var : (VAR|decla_affect) ',' declaration_var | (VAR|decla_affect) ;
 return_stmt : 'return' expression? ';' ;
 affectation_declaration: 'int' VAR '=' expression ';' ;
 arg_list : expression (',' expression)* ;
-
+switch_stmt : 'switch' '(' expression ')' '{' switch_case* switch_default? '}' ;
+switch_case : 'case' CONST ':' stmt* ;
+switch_default : 'default' ':' stmt* ;
 
 expression 	: '(' expression ')'                            #par
 			| NOT expression							    #not
@@ -61,7 +64,9 @@ expression 	: '(' expression ')'                            #par
             | expression op=(EQ|NEQ) expression          	#eq
             | expression BITWISE_AND expression				#bitwise_and
             | expression BITWISE_XOR expression				#bitwise_xor
-            | expression BITWISE_OR expression				#bitwise_or 
+            | expression BITWISE_OR expression				#bitwise_or
+            | expression LOGICAL_AND expression				#logical_and
+            | expression LOGICAL_OR expression				#logical_or
            	| VAR op=(AEQ|PEQ|MEQ) expression				#affectation
             | VAR '(' arg_list? ')'                         #call
             | PUTCHAR '(' expression ')'                    #putchar
@@ -102,6 +107,8 @@ NOT : '!';
 BITWISE_OR : '|';
 BITWISE_AND : '&';
 BITWISE_XOR : '^';
+LOGICAL_AND : '&&';
+LOGICAL_OR : '||';
 AEQ : '=';
 PEQ : '+=';
 MEQ : '-=';
