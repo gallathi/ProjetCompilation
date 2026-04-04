@@ -424,7 +424,7 @@ void IRInstr::gen_asm(ostream &o)
     	o << "    cvtsi2sd %eax, %xmm0" << endl;
     	o << "    movsd %xmm0, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;
     	break;
-   	case double_to_int: // destination / source
+   case double_to_int: // destination / source
     	o << "    movsd " << bb->cfg->IR_reg_to_asm(params[1]) << ", %xmm0" << endl;
     	o << "    cvttsd2si %xmm0, %eax" << endl;
     	o << "    movl %eax, " << bb->cfg->IR_reg_to_asm(params[0]) << endl;

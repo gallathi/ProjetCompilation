@@ -71,6 +71,10 @@ public:
 	virtual std::any visitCall(ifccParser::CallContext *ctx) override;
 	virtual std::any visitDeclaration(ifccParser::DeclarationContext *ctx) override;
 	virtual std::any visitDconst(ifccParser::DconstContext *ctx) override;
+	virtual std::any visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx) override;
+	virtual std::any visitSwitch_case(ifccParser::Switch_caseContext *ctx) override;
+	virtual std::any visitLogical_and(ifccParser::Logical_andContext *ctx) override;
+	virtual std::any visitLogical_or(ifccParser::Logical_orContext *ctx) override;
 
 	int getErrorCount();
 	int getNextOffset();
@@ -101,6 +105,7 @@ protected:
 	std::string declareVar(const std::string &varName, bool affected);
 	void allocateTemporary(Type t);
 
+protected:
 	std::map<std::string, FunctionSignature> functionSignatures;
 	std::map<std::string, FunctionSemanticState> functionStates;
 	std::string currentFunction;
@@ -111,4 +116,5 @@ protected:
 	int declarationCounter = 0;
 	int loopLevel = 0;
 	Type currentType;
+	int switchLevel = 0;
 };

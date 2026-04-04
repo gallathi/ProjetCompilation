@@ -54,6 +54,9 @@ public:
 	virtual std::any visitPost_decr(ifccParser::Post_decrContext *ctx) override;
 	virtual std::any visitStmt(ifccParser::StmtContext *ctx) override;
 	virtual std::any visitDecla_affect(ifccParser::Decla_affectContext *ctx) override;
+	virtual std::any visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx) override;
+	virtual std::any visitLogical_and(ifccParser::Logical_andContext *ctx) override;
+	virtual std::any visitLogical_or(ifccParser::Logical_orContext *ctx) override;
 	virtual std::any visitDconst(ifccParser::DconstContext *ctx) override;
 
 protected:
@@ -62,7 +65,7 @@ protected:
 	std::string currentFunction;
 	std::map<std::string, varInfo> currentVarTable;
 	int currentFrameBytes = 0;
-	std::map<std::string, std::string> postfixOps;
+	std::vector<std::pair<std::string, std::string>> postfixOps;
 	bool hasReturned = false;
 	int declarationCounter = 0;
 	int currentParamIndex = 0;
@@ -75,4 +78,5 @@ protected:
 	std::map<std::string, double> dconsts;
 	int nextDConstIndex = 0;
 	bool hasDoubleOpposite = false;
+	CFG cfg;
 };
