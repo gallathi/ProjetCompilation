@@ -4,6 +4,7 @@
 #include "generated/ifccBaseVisitor.h"
 #include "VariableVisitor.h"
 #include "IR.h"
+#include "type.h"
 
 #include <map>
 #include <string>
@@ -56,6 +57,7 @@ public:
 	virtual std::any visitSwitch_stmt(ifccParser::Switch_stmtContext *ctx) override;
 	virtual std::any visitLogical_and(ifccParser::Logical_andContext *ctx) override;
 	virtual std::any visitLogical_or(ifccParser::Logical_orContext *ctx) override;
+	virtual std::any visitDconst(ifccParser::DconstContext *ctx) override;
 
 protected:
 	std::map<std::string, FunctionSemanticState> functionStates;
@@ -73,6 +75,8 @@ protected:
 	std::string createScopedName(const std::string &name);
 	std::string resolveVisibleVar(const std::string &name) const;
 	void bindFunctionState(const std::string &name);
-	
+	std::map<std::string, double> dconsts;
+	int nextDConstIndex = 0;
+	bool hasDoubleOpposite = false;
 	CFG cfg;
 };

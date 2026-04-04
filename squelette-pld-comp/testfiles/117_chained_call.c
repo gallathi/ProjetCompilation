@@ -7,7 +7,9 @@ int g(int x) {
 }
 
 int h(int x) {
-    return g(x) + 10;
+	int a = 10, b;
+	b = g(x);
+    return a + b;
 }
 
 int main() {

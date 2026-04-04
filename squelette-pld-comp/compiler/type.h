@@ -6,7 +6,13 @@ enum Type
 {
     INT,
     VOID,
-    CHAR
+    CHAR,
+    DOUBLE
+};
+
+class TypeSizes {
+	public:
+		int getTypeSize(Type t);
 };
 
 #endif

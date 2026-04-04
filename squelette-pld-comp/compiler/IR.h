@@ -52,7 +52,8 @@ public:
 		getchar,
 		putchar,
 		jump,
-		pointeurAffect
+		int_to_double,
+		double_to_int
 	} Operation;
 
 	static string op_to_string(IRInstr::Operation op)
@@ -111,6 +112,10 @@ public:
 			return "putchar";
 		case IRInstr::jump:
 			return "jump";
+		case IRInstr::int_to_double:
+			return "int_to_double";
+		case IRInstr::double_to_int:
+			return "double_to_int";
 		}
 
 		return "unknown";
@@ -211,7 +216,7 @@ protected:
 class CFG
 {
 public:
-	CFG() : nextFreeSymbolIndex(4), nextBBnumber(0), functionName(""), returnLabel("return_exit_label"), current_bb(nullptr) {}
+	CFG() : nextBBnumber(0), functionName(""), returnLabel("return_exit_label"), current_bb(nullptr) {}
 	virtual ~CFG();
 
 	void add_bb(BasicBlock *bb);
@@ -221,8 +226,10 @@ public:
 	string IR_reg_to_asm(string reg); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
 	void set_function_name(const string &name);
 	string get_return_label() const;
+	void gen_asm_text_section_line(ostream &o);
 	void gen_asm_prologue(ostream &o, int compteurVar, bool emitGlobal = false);
 	void gen_asm_epilogue(ostream &o, bool emitStackNote = false);
+	void gen_asm_data_section(ostream &o, map<string, double> dconsts, bool hasDoubleOpposite);
 
 	// symbol table methods
 	void add_to_symbol_table(string name, Type t);
@@ -248,8 +255,8 @@ public:
 protected:
 	map<string, Type> SymbolType; /**< part of the symbol table  */
 	map<string, int> SymbolIndex; /**< part of the symbol table  */
-	int nextFreeSymbolIndex;	  /**< to allocate new symbols in the symbol table */
-	int nextBBnumber;			  /**< just for naming */
+	int nextFreeSymbolIndex = 0;	  /**< to allocate new symbols in the symbol table */
+	int nextBBnumber = 0;			  /**< just for naming */
 	string functionName;
 	string returnLabel;
 
