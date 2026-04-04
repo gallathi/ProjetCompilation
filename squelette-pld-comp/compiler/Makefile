@@ -24,7 +24,7 @@ OBJECTS=build/ifccBaseVisitor.o \
 
 ifcc: $(OBJECTS)
 	@mkdir -p build
-	$(CC) $(LDFLAGS) build/*.o $(ANTLRLIB) -o ifcc
+	$(CC) $(LDFLAGS) build/*.o $(ANTLRLIB) -o ../../ifcc
 
 ##########################################
 # compile our hand-writen C++ code: main(), CodeGenVisitor, etc.
@@ -70,4 +70,4 @@ gui:
 # delete all machine-generated files
 clean:
 	rm -rf build generated
-	rm -f ifcc
+	rm -f ../../ifcc

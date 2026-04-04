@@ -1,25 +1,31 @@
-# Fonctionnalités implémentées
+# Lien vers le git
 
-Notre code implémente toutes les fonctionnalités du TP jusqu'au 4.7 inclus, c'est-à-dire :
-- Gestion des variables int et constantes
-- Opérateurs arithmétiques +, -, *, / et %
-- Opérateur unaire -
-- Parenthèses
-- Affectations (sans retour de valeur pour l'instant)
-- 1 déclaration au début du code
+https://github.com/gallathi/ProjetCompilation.git
+
+# Présentation de l'hexanôme
+
+Les parties communes comme la grammaire, le visiteur de variables, le générateur de code et l'allocation de la pile ne sont pas mentionnées car tous ceux ayant travaillé sur le projet les ont modifié à un moment ou un autre.
+- GALLAPONT Thibault (opérateurs de l'IR, switch, tests)
+- WYBOUW Esteban (opérateurs de l'IR, CFG, doubles, tests)
+- SOLIMAN Nouraldin (fonctions, gestion des char, tests)
+- HASBANI Elie (boucles, gestion des blocs, tests)
+- OWEIDAT Mohamad (opérateurs paresseux)
+- SAVCHENKO Grigory
+- SENAH Yao
 
 # Comment naviguer dans le code
 
 Nous n'avons pas changé le nom des programmes.
-Pour make, il faut faire make dans squelette-pld-comp/compiler.
 
-Depuis le dossier compiler :
+Pour make, il faut écrire "make" dans ce dossier.
 
-Pour compiler et lancer un test, il faut faire :
-./ifcc ../testfiles/11_soustraction.c > ../testfiles/out.s && g++ ../testfiles/out.s -o ../testfiles/a.out && ../testfiles/a.out
+Pour lancer les tests, il faut écrire "make test" dans ce dossier (prend un peu de temps).
+
+Pour lancer les tests non-fonctionnels, il faut écrire "make testfail" dans ce dossier.
+
+Pour lancer un test précis, il faut copier-coller (en changeant le nom du test) :
+./ifcc squelette-pld-comp/testfiles/11_soustraction.c > squelette-pld-comp/testfiles/out.s && g++ squelette-pld-comp/testfiles/out.s -o squelette-pld-comp/testfiles/a.out && squelette-pld-comp/testfiles/a.out
 Puis : echo $?
-Pour lancer le programme de test python :
-python3 ../ifcc-test.py --verbose ../testfiles
 
 # Gestion du projet
 
@@ -27,7 +33,7 @@ On a commencé par travailler en binôme, puis on a synchronisé nos codes quelq
 Maintenant, on va probablement travailler sur des fonctionnalités différentes puis merge des branches en s'assurant que tout marche bien.
 
 
-# TODO 
+# Fonctionnalités implémentées 
 
 ### ✅ Déjà Implémenté (Already Implemented) 
 * [x] Un seul fichier source sans pré-processing.
@@ -42,7 +48,7 @@ Maintenant, on va probablement travailler sur des fonctionnalités différentes 
 * [x] Division et modulo.
 * [x] Opérations logiques bit-à-bit (`|`, `&`, `^`).
 * [x] Opérations de comparaison (`==`, `!=`, `<`, `>`).
-* [X] Opérations unaires (`!`, `-`).
+* [x] Opérations unaires (`!`, `-`).
 * [x] Affectation (qui retourne aussi une valeur).
 * [x] Utilisation des fonctions standard `putchar` et `getchar` pour les entrées-sorties.
 * [x] Définition de fonctions avec paramètres, et type de retour `int` ou `void`.

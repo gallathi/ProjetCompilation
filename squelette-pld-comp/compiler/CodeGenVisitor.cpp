@@ -70,6 +70,9 @@ antlrcpp::Any CodeGenVisitor::visitFunction_def(ifccParser::Function_defContext 
 		cfg.add_to_symbol_table(name, Type::INT);
 	}
 
+    if (currentFrameBytes % 16 != 0) {
+        currentFrameBytes += 16 - currentFrameBytes % 16;
+    }
 	cfg.gen_asm_prologue(cout, currentFrameBytes, currentFunction == "main");
 
 	BasicBlock *entry = new BasicBlock(&cfg, cfg.new_BB_name());
