@@ -216,7 +216,7 @@ protected:
 class CFG
 {
 public:
-	CFG() : nextFreeSymbolIndex(4), nextBBnumber(0), functionName(""), returnLabel("return_exit_label"), current_bb(nullptr) {}
+	CFG() : nextBBnumber(0), functionName(""), returnLabel("return_exit_label"), current_bb(nullptr) {}
 	virtual ~CFG();
 
 	void add_bb(BasicBlock *bb);

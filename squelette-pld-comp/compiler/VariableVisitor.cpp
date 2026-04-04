@@ -143,7 +143,7 @@ std::string VariableVisitor::declareVar(const std::string &varName, bool affecte
     varInfo info;
     state.nextIndex += typeSizes.getTypeSize(currentType);
     info.index = state.nextIndex;
-    state.compteurVar += state.nextIndex;
+    state.compteurVar += typeSizes.getTypeSize(currentType);
     info.used = false;
     info.affected = affected;
     info.type = currentType;
@@ -256,6 +256,7 @@ std::any VariableVisitor::visitFunction_def(ifccParser::Function_defContext *ctx
             {
                 continue;
             }
+            currentType = pType;
             std::string symbol = declareVar(paramCtx->VAR()->getText(), true);
             if (!symbol.empty())
             {
