@@ -17,10 +17,7 @@ class CodeGenVisitor : public ifccBaseVisitor
 public:
 	CodeGenVisitor(const std::map<std::string, FunctionSemanticState> &functionStates,
 		const std::map<std::string, FunctionSignature> &functionSignatures)
-		: functionStates(functionStates), functionSignatures(functionSignatures) 
-	{
-		dconsts[".LC0"] = 0;
-	}
+		: functionStates(functionStates), functionSignatures(functionSignatures) {}
 	virtual ~CodeGenVisitor() {}
 	virtual std::any visitProg(ifccParser::ProgContext *ctx) override;
 	virtual std::any visitFunction_def(ifccParser::Function_defContext *ctx) override;
@@ -76,5 +73,6 @@ protected:
 	std::string resolveVisibleVar(const std::string &name) const;
 	void bindFunctionState(const std::string &name);
 	std::map<std::string, double> dconsts;
-	int nextDConstIndex = 1;
+	int nextDConstIndex = 0;
+	bool hasDoubleOpposite = false;
 };

@@ -229,7 +229,7 @@ public:
 	void gen_asm_text_section_line(ostream &o);
 	void gen_asm_prologue(ostream &o, int compteurVar, bool emitGlobal = false);
 	void gen_asm_epilogue(ostream &o, bool emitStackNote = false);
-	void gen_asm_data_section(ostream &o, map<string, double> dconsts);
+	void gen_asm_data_section(ostream &o, map<string, double> dconsts, bool hasDoubleOpposite);
 
 	// symbol table methods
 	void add_to_symbol_table(string name, Type t);

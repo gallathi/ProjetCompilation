@@ -141,9 +141,9 @@ std::string VariableVisitor::declareVar(const std::string &varName, bool affecte
     std::string symbolName = varName + "#" + std::to_string(state.declarationCounter);
 
     varInfo info;
-    info.index = state.nextIndex;
     state.nextIndex += typeSizes.getTypeSize(currentType);
-    state.compteurVar += typeSizes.getTypeSize(currentType);
+    info.index = state.nextIndex;
+    state.compteurVar += state.nextIndex;
     info.used = false;
     info.affected = affected;
     info.type = currentType;
@@ -430,6 +430,7 @@ antlrcpp::Any VariableVisitor::visitDecla_affect(ifccParser::Decla_affectContext
 		std::cout << "affectation de la variable " << var << std::endl;
 	return 0;
 }
+
 antlrcpp::Any VariableVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
 {
 	

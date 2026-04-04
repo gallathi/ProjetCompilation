@@ -55,7 +55,7 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     {
         visit(fn);
     }
-    cfg.gen_asm_data_section(cout, dconsts);
+    cfg.gen_asm_data_section(cout, dconsts, hasDoubleOpposite);
     return antlrcpp::Any();
 }
 
@@ -288,8 +288,8 @@ antlrcpp::Any CodeGenVisitor::visitAffectation_declaration(ifccParser::Affectati
     string value = std::any_cast<string>(visit(ctx->expression()));
     
     if (cfg.get_var_type(value) == Type::INT && cfg.get_var_type(scopedName) == Type::DOUBLE) {
-    	string conversion = cfg.create_new_tempvar(Type::INT);
-		cfg.add_to_symbol_table(conversion, Type::INT);
+    	string conversion = cfg.create_new_tempvar(Type::DOUBLE);
+		cfg.add_to_symbol_table(conversion, Type::DOUBLE);
 		cfg.current_bb->add_IRInstr(IRInstr::int_to_double, cfg.get_var_type(value), {conversion, value});
 		value = conversion;
     } else if (cfg.get_var_type(value) == Type::DOUBLE && cfg.get_var_type(scopedName) == Type::INT) {
@@ -311,8 +311,8 @@ antlrcpp::Any CodeGenVisitor::visitAffectation(ifccParser::AffectationContext *c
 	string value = std::any_cast<string>(visit(ctx->expression()));
 	
 	if (cfg.get_var_type(value) == Type::INT && cfg.get_var_type(varName) == Type::DOUBLE) {
-    	string conversion = cfg.create_new_tempvar(Type::INT);
-		cfg.add_to_symbol_table(conversion, Type::INT);
+    	string conversion = cfg.create_new_tempvar(Type::DOUBLE);
+		cfg.add_to_symbol_table(conversion, Type::DOUBLE);
 		cfg.current_bb->add_IRInstr(IRInstr::int_to_double, cfg.get_var_type(value), {conversion, value});
 		value = conversion;
     } else if (cfg.get_var_type(value) == Type::DOUBLE && cfg.get_var_type(varName) == Type::INT) {
@@ -342,6 +342,18 @@ antlrcpp::Any CodeGenVisitor::visitDecla_affect(ifccParser::Decla_affectContext 
 	std::string varSource = ctx->VAR()->getText();
 	std::string varName = resolveVisibleVar(varSource);
 	string value = std::any_cast<string>(visit(ctx->expression()));
+	
+	if (cfg.get_var_type(value) == Type::INT && cfg.get_var_type(varName) == Type::DOUBLE) {
+    	string conversion = cfg.create_new_tempvar(Type::DOUBLE);
+		cfg.add_to_symbol_table(conversion, Type::DOUBLE);
+		cfg.current_bb->add_IRInstr(IRInstr::int_to_double, cfg.get_var_type(value), {conversion, value});
+		value = conversion;
+    } else if (cfg.get_var_type(value) == Type::DOUBLE && cfg.get_var_type(varName) == Type::INT) {
+    	string conversion = cfg.create_new_tempvar(Type::INT);
+		cfg.add_to_symbol_table(conversion, Type::INT);
+		cfg.current_bb->add_IRInstr(IRInstr::double_to_int, cfg.get_var_type(value), {conversion, value});
+		value = conversion;
+    }
 
 	cfg.current_bb->add_IRInstr(IRInstr::copy, cfg.get_var_type(varName), {varName, value});
 
@@ -353,7 +365,7 @@ antlrcpp::Any CodeGenVisitor::visitPre_incr(ifccParser::Pre_incrContext *ctx)
 	std::string varName = resolveVisibleVar(varSource);
 	string tempVar = cfg.create_new_tempvar(cfg.get_var_type(varName));
 	cfg.add_to_symbol_table(tempVar, cfg.get_var_type(varName));
-	cfg.current_bb->add_IRInstr(IRInstr::ldconst, cfg.get_var_type(varName), {tempVar, "1"});
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
 	if (cfg.get_var_type(varName) == Type::DOUBLE) {
 		string conversion = cfg.create_new_tempvar(Type::INT);
 		cfg.add_to_symbol_table(conversion, Type::INT);
@@ -371,7 +383,7 @@ antlrcpp::Any CodeGenVisitor::visitPre_decr(ifccParser::Pre_decrContext *ctx)
 	std::string varName = resolveVisibleVar(varSource);
 	string tempVar = cfg.create_new_tempvar(cfg.get_var_type(varName));
 	cfg.add_to_symbol_table(tempVar, cfg.get_var_type(varName));
-	cfg.current_bb->add_IRInstr(IRInstr::ldconst, cfg.get_var_type(varName), {tempVar, "1"});
+	cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
 	if (cfg.get_var_type(varName) == Type::DOUBLE) {
 		string conversion = cfg.create_new_tempvar(Type::INT);
 		cfg.add_to_symbol_table(conversion, Type::INT);
@@ -464,9 +476,7 @@ antlrcpp::Any CodeGenVisitor::visitOpposite(ifccParser::OppositeContext *ctx)
 {
     string rhs = std::any_cast<string>(visit(ctx->expression()));
     if (cfg.get_var_type(rhs) == Type::DOUBLE) {
-    	string conversion = cfg.create_new_tempvar(Type::INT);
-    	cfg.add_to_symbol_table(conversion, Type::INT);
-    	cfg.current_bb->add_IRInstr(IRInstr::double_to_int, Type::INT, {conversion, rhs});
+    	hasDoubleOpposite = true;
     }
     string out = cfg.create_new_tempvar(cfg.get_var_type(rhs));
     cfg.add_to_symbol_table(out, cfg.get_var_type(rhs));
@@ -742,7 +752,7 @@ antlrcpp::Any CodeGenVisitor::visitStmt(ifccParser::StmtContext *ctx)
 		string tempVar = cfg.create_new_tempvar(type);
 		cfg.add_to_symbol_table(tempVar, type);
 
-		cfg.current_bb->add_IRInstr(IRInstr::ldconst, type, {tempVar, "1"});
+		cfg.current_bb->add_IRInstr(IRInstr::ldconst, Type::INT, {tempVar, "1"});
 		if (cfg.get_var_type(op.first) == Type::DOUBLE) {
 			string conversion = cfg.create_new_tempvar(Type::INT);
 			cfg.add_to_symbol_table(conversion, Type::INT);
