@@ -31,9 +31,9 @@ Pour l'utiliser :
     - "make testfail" pour lancer les tests non-fonctionnels
 - Pour exécuter/tester un fichier précis, dans ce dossier :
     - Changer le "10_soustraction.c" de la commande suivante pour exécuter le test voulu
-    - "./ifcc squelette-pld-comp/testfiles/10_soustraction.c > squelette-pld-comp/testfiles/out.s && g++ squelette-pld-comp/testfiles/out.s -o squelette-pld-comp/testfiles/a.out && squelette-pld-comp/testfiles/a.out"
+    - "./ifcc squelette-pld-comp/testfiles/10_soustraction.c > squelette-pld-comp/testfiles/out.s && gcc squelette-pld-comp/testfiles/out.s -o squelette-pld-comp/testfiles/a.out && squelette-pld-comp/testfiles/a.out"
     - "echo $?" pour obtenir le résultat
-    - Si besoin, consulter le fichier out.s dans squelette-pld-comp/testfiles
+    - Si c'est juste pour voir l'assembleur, "./ifcc squelette-pld-comp/testfiles/10_soustraction.c" est suffisant
 
 # Documentation Développeur
 
@@ -45,7 +45,14 @@ VariableVisitor.cpp est un visiteur qui parcourt le programme à compiler pour c
 CodeGenVisitor.cpp est un visiteur qui fait un 2ème parcours pour créer les variables temporaires nécessaires aux opérations de la grammaires et appeler l'IR.
 IR.cpp contient le CFG, BasicBlock et les instructions assembleurs. Il est appelé par CodeGenVisitor pour enregistrer le contexte d'un bloc, d'une fonction, ou pour générer l'assembleur associé à une opération spécifique.
 main.cpp lance les parcours des 2 visiteurs en transmettant la table des variables de VariableVisitor à CodeGenVisitor. Il permet également de set le debug à true pour avoir des messages de debug.
-symbole.h et type.h sont des fichiers minimalistes qui auraient été utiles pour des fonctionnalités plus avancées.
+symbole.h est un fichier fourni qui aurait été utiles pour d'autres fonctionnalités.
+type.h et .cpp contiennent la liste des types utilisés par les instructions assembleur pour l'allocation mémoire.
+
+Note sur l'implémentation des doubles inachevée :
+Nous avons déjà dans type.h une classe TypeSizes qui permet de récup la taille des types en mémoire.
+Les instructions assembleur qui sont affichées dépendent du type du contexte (somme de INT ou somme de DOUBLE), les conversions sont calculées en regardant les types des membres de l'expression.
+Les doubles sont stockés dans l'assembleur dans la section .rodata dans laquelle ils sont nommés (.LC0 .LC1 ...) puis utilisés dans le code.
+Ce n'est pas fonctionnel pour l'instant car on a un problème sur les opérations classiques (1+3.0 ne renvoie pas la même chose que 3.0+1) donc la gestion des fonctions avec les doubles n'a même pas été implémentée.
 
 Tests :
 Les tests sont situés dans squelette-pld-comp/testfiles et squelette-pld-comp/testfilesfail.
