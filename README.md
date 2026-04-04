@@ -24,8 +24,9 @@ Pour lancer les tests, il faut écrire "make test" dans ce dossier (prend un peu
 Pour lancer les tests non-fonctionnels, il faut écrire "make testfail" dans ce dossier.
 
 Pour lancer un test précis, il faut copier-coller (en changeant le nom du test) :
-./ifcc squelette-pld-comp/testfiles/11_soustraction.c > squelette-pld-comp/testfiles/out.s && g++ squelette-pld-comp/testfiles/out.s -o squelette-pld-comp/testfiles/a.out && squelette-pld-comp/testfiles/a.out
+./ifcc squelette-pld-comp/testfiles/10_soustraction.c > squelette-pld-comp/testfiles/out.s && g++ squelette-pld-comp/testfiles/out.s -o squelette-pld-comp/testfiles/a.out && squelette-pld-comp/testfiles/a.out
 Puis : echo $?
+(si besoin, le fichier out.s sera dans squelette-pld-comp/testfiles)
 
 # Gestion du projet
 
